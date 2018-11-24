@@ -54,12 +54,13 @@ function Section (name, units, speed) {
     this.casualties = [];
     this.state = 'active'
 }
-function Unit (name, unitName, wSystems, hp, sp) {
+function Unit (name, unitName, wSystems, hp, sp, evasion) {
     this.name = name;
     this.unitName = unitName;
     this.wSystems = wSystems;
     this.hp = hp;
     this.sp = sp;
+    this.evasion = evasion;
     this.state = 'active'
 }
 function WeaponSystem (name, weapons) {
@@ -148,6 +149,19 @@ const percentileRoll = function () {
 };
 
 /**
+ * Removes a unit from an array, and returns it for insertion into 
+ */
+const removeUnit = function (unit, array, type, deadArray) {
+    const index = array.indexOf(unit);
+    if (index !== -1) {
+        array.splice(index, 1);
+    }
+    if (!!deadArray) {
+        deadArray.push(unit);
+    }
+}
+
+/**
  * Returns a random active element from the given array.
  */
 const selectTarget = function (array) {
@@ -180,25 +194,29 @@ const damageCalc = function (weapon, def) {
  */
 const behaviourAttack = function (atk, targetsArray) {
 
-    // TODO: For each weapon system, choose a target.
     atk.wSystems.forEach(function(system) {
-        const targetedSection = selectTarget(targetsArray);
-        const def = selectTarget(targetedSection.units);
-        // TODO: Make evasion dependant on def.
-        const evasion = 50;
+        let targetedSection = selectTarget(targetsArray);
+        let def = selectTarget(targetedSection.units);
+        let evasion = def.evasion;
         
         // For each weapon, roll an attack and resolve the damage
+        // If we destroy the unit, remove it from targets and into casualties.
+        // Check that our target is destroyed before we calc attack.
         system.weapons.forEach(function(weapon) {
-            const roll = percentileRoll();
-            if (roll >= evasion) {
-                // Attack hits
-                console.log('Hit');
-                let result = damageCalc(weapon, def);
+            if (def.state !== "Destroyed") {
+                const roll = percentileRoll();
+
+                // If attack hits, calculate damage.
+                if (roll >= evasion) {
+                    console.log('Hit');
+                    let result = damageCalc(weapon, def);
+                    if (def.state === "Destroyed") {
+                        console.log(def.name + " Destroyed")
+                        removeUnit(def, targetedSection.units, def.state, targetedSection.casualties);
+                    }
+                }
             }
         })
-
-        console.log(atk);
-        console.log(def);
     })
 };
 
@@ -207,6 +225,7 @@ const behaviourAttack = function (atk, targetsArray) {
  */
 const passTurn = function (sectionsArray) {
     let targetUp = true;
+    
     // For each section, determine if it is the section's turn.
     sectionsArray.forEach(function(section) {
         if (section.speed === 0) {
@@ -250,7 +269,7 @@ let RedForce = new Group(
                         new Weapon("KX9 Laser Cannon", 3),
                         new Weapon("KX9 Laser Cannon", 3),
                     ])
-                ], 10, 10),
+                ], 10, 10, 50),
                 new Unit("Red Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -259,7 +278,7 @@ let RedForce = new Group(
                         new Weapon("KX9 Laser Cannon", 3),
                         new Weapon("KX9 Laser Cannon", 3),
                     ])
-                ], 10, 10),
+                ], 10, 10, 50),
                 new Unit("Red Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -268,9 +287,9 @@ let RedForce = new Group(
                         new Weapon("KX9 Laser Cannon", 3),
                         new Weapon("KX9 Laser Cannon", 3),
                     ])
-                ], 10, 10),
+                ], 10, 10, 50),
             ],
-            3
+            Math.floor(Math.random()*3)
         )
     ]
 )
@@ -289,8 +308,8 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 3),
                         new Weapon("KX9 Laser Cannon", 3),
                     ])
-                ], 10, 10),
-                new Unit("Blue Alpha", "T65 X-Wing", [
+                ], 10, 10, 50),
+                new Unit("Blue Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
                         new Weapon("KX9 Laser Cannon", 3),
@@ -298,8 +317,8 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 3),
                         new Weapon("KX9 Laser Cannon", 3),
                     ])
-                ], 10, 10),
-                new Unit("Blue Alpha", "T65 X-Wing", [
+                ], 10, 10, 50),
+                new Unit("Blue Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
                         new Weapon("KX9 Laser Cannon", 3),
@@ -307,17 +326,15 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 3),
                         new Weapon("KX9 Laser Cannon", 3),
                     ])
-                ], 10, 10),
+                ], 10, 10, 50),
             ],
-            3
+            Math.floor(Math.random()*3)
         )
     ]
 )
 
 
 // Execution
-
-console.log(RedForce);
 
 let winner = '';
 // Battle Loop
@@ -329,6 +346,8 @@ for (let i = 0; i < 10; i++) {
         combatants = combatants.concat(RedForce.sectionsArray);
         combatants = combatants.concat(BlueForce.sectionsArray);
         passTurn(combatants);
+        console.log(RedForce.sectionsArray[0]);
+        console.log(BlueForce.sectionsArray[0]);
     } else { // End loop
         if (winner.length !== 0) console.log("The winner is " + winner + ".");
         i = 11;
