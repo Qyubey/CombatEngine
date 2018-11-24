@@ -132,6 +132,12 @@ const constructString = function (log) {
 const percentileRoll = function () {
     return Math.floor(Math.random()*100);
 };
+/**
+ * Returns a random number for damage calculation.
+ */
+const damageRoll = function (max) {
+    return Math.floor(Math.random()*(max-1)) + 1;
+};
 
 /**
  * Removes a unit from an array, and returns it for insertion into 
@@ -161,11 +167,12 @@ const selectTarget = function (array) {
  */
 const damageCalc = function (logData, weapon, atk, def) {
     let logString = "";
+    let damage = damageRoll(weapon.damage);
     if (def.sp === 0) {
-        def.hp -= weapon.damage;
+        def.hp -= damage;
 
         // Add Log Data
-        logString += atk.name + " dealt " + weapon.damage + " hull damage to " + def.name + ".";
+        logString += atk.name + " dealt " + damage + " hull damage to " + def.name + " using " + weapon.name + ".";
 
         if (def.hp <= 0) {
             def.hp = 0;
@@ -180,14 +187,14 @@ const damageCalc = function (logData, weapon, atk, def) {
         }
 
         // Add Log Data
-        atk.totalDamageDealt += weapon.damage;
-        logData.hpDam += weapon.damage;
+        atk.totalDamageDealt += damage;
+        logData.hpDam += damage;
 
     } else {
-        def.sp -= weapon.damage;
+        def.sp -= damage;
 
         // Add Log Data
-        logString += atk.name + " dealt " + weapon.damage + " shield damage to " + def.name + ".";
+        logString += atk.name + " dealt " + damage + " shield damage to " + def.name + " using " + weapon.name + ".";
 
         if (def.sp <= 0) {
             def.sp = 0;
@@ -200,8 +207,8 @@ const damageCalc = function (logData, weapon, atk, def) {
         }
 
         // Add Log Data
-        atk.totalDamageDealt += weapon.damage;
-        logData.spDam += weapon.damage;
+        atk.totalDamageDealt += damage;
+        logData.spDam += damage;
     }
     logData.push(logString);
 };
@@ -294,28 +301,28 @@ let RedForce = new Group(
                 new Unit("Red Alpha", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
                     ])
                 ], 10, 10, 50),
                 new Unit("Red Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
                     ])
                 ], 10, 10, 50),
                 new Unit("Red Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
                     ])
                 ], 10, 10, 50),
             ],
@@ -333,28 +340,28 @@ let BlueForce = new Group(
                 new Unit("Blue Alpha", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
                     ])
                 ], 10, 10, 50),
                 new Unit("Blue Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
                     ])
                 ], 10, 10, 50),
                 new Unit("Blue Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                         [
-                            new Weapon("KX9 Laser Cannon", 3),
-                            new Weapon("KX9 Laser Cannon", 3),
-                            new Weapon("KX9 Laser Cannon", 3),
-                            new Weapon("KX9 Laser Cannon", 3),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
                         ])
                 ], 10, 10, 50),
             ],
