@@ -1,12 +1,8 @@
 // SW
 
-// TODO: Ignore log for now, just get functions working.
-// Pull dead units out of units array, put in Casualties array.
-// Record total damage dealt and kills for each unit.
-// Rewrite combat flow so it ends properly when all enemies dead.
+// TODO: Refactor loops so they cancel out when there are no valid targets.
 
-// TODO: Create a github for version control
-// Add web functionality. Set up armies and manually play turns from HTML.
+// TODO: Add web functionality. Set up armies and manually play turns from HTML.
 // Log combat turns to HTML properly.
 
 // TODO: List all details of all Units, Weapons, Components to external file.
@@ -75,11 +71,11 @@ function Weapon (name, damage) {
 }
 
 
-// Functions
+// Logging
 
 const printLog = function (logString) {
     const logArray = logString.split("\n");
-    logArray.push("=====");
+    logArray.push("-----");
     logArray.forEach(function(part) {
         let para = document.createElement("p");
         const node = document.createTextNode(part);
@@ -90,11 +86,6 @@ const printLog = function (logString) {
     })
 }
 
-/**
- * Creates a string log for the recent action from a log object.
- * @param log
- * @returns {string}
- */
 const constructLog = function (log) {
     // Record amount of hits, amount of misses.
     // Record total damage to sp and hp
@@ -141,6 +132,9 @@ const constructLog = function (log) {
     return resultString;
 };
 
+
+// Functions
+
 /**
  * Returns a random number from 1 to 100.
  */
@@ -151,7 +145,7 @@ const percentileRoll = function () {
 /**
  * Removes a unit from an array, and returns it for insertion into 
  */
-const removeUnit = function (unit, array, type, deadArray) {
+const removeUnit = function (unit, array, deadArray) {
     const index = array.indexOf(unit);
     if (index !== -1) {
         array.splice(index, 1);
@@ -196,27 +190,31 @@ const behaviourAttack = function (atk, targetsArray) {
 
     atk.wSystems.forEach(function(system) {
         let targetedSection = selectTarget(targetsArray);
-        let def = selectTarget(targetedSection.units);
-        let evasion = def.evasion;
-        
-        // For each weapon, roll an attack and resolve the damage
-        // If we destroy the unit, remove it from targets and into casualties.
-        // Check that our target is destroyed before we calc attack.
-        system.weapons.forEach(function(weapon) {
-            if (def.state !== "Destroyed") {
-                const roll = percentileRoll();
+        if (targetedSection.units.length !== 0) {
+            let def = selectTarget(targetedSection.units);
+            let evasion = def.evasion;
+            
+            // For each weapon, roll an attack and resolve the damage
+            // If we destroy the unit, remove it from targets and into casualties.
+            // Check that our target is destroyed before we calc attack.
+            system.weapons.forEach(function(weapon) {
+                if (def.state !== "Destroyed") {
+                    const roll = percentileRoll();
 
-                // If attack hits, calculate damage.
-                if (roll >= evasion) {
-                    console.log('Hit');
-                    let result = damageCalc(weapon, def);
-                    if (def.state === "Destroyed") {
-                        console.log(def.name + " Destroyed")
-                        removeUnit(def, targetedSection.units, def.state, targetedSection.casualties);
+                    // If attack hits, calculate damage.
+                    if (roll >= evasion) {
+                        let combatLog = atk.name + ' hits ' + def.name + " for " + weapon.damage + " damage!";
+                        damageCalc(weapon, def);
+                        printLog(combatLog);
+                        printLog(def.name + ": " + def.hp + "/10 HP " + def.sp + "/10SP");
+                        if (def.state === "Destroyed") {
+                            printLog(def.name + " Destroyed")
+                            removeUnit(def, targetedSection.units, targetedSection.casualties);
+                        }
                     }
                 }
-            }
-        })
+            })
+        }
     })
 };
 
@@ -224,16 +222,14 @@ const behaviourAttack = function (atk, targetsArray) {
  * Determines if it is the turn for any of the sectionsArray given.
  */
 const passTurn = function (sectionsArray) {
-    let targetUp = true;
-    
+
     // For each section, determine if it is the section's turn.
     sectionsArray.forEach(function(section) {
         if (section.speed === 0) {
-            console.log(section.name + " takes a turn.");
-            printLog(section.name + " takes a turn.");
+            printLog(section.name + " takes a turn. " + section.units.length + " units available.");
 
             // Create possible targets array.
-            let targetsArray = sectionsArray.filter(function(target) {
+            let targetSectionsArray = sectionsArray.filter(function(target) {
                 return target.name !== section.name;
             });
 
@@ -241,7 +237,7 @@ const passTurn = function (sectionsArray) {
             // TODO: Alter behaviour based on Morale here.
             // TODO: For each unit in section, execute behaviour.
             section.units.forEach(function(unit) {
-                behaviourAttack(unit, targetsArray);
+                behaviourAttack(unit, targetSectionsArray);
             });
 
             // Reset speed/turn timer.
@@ -333,24 +329,27 @@ let BlueForce = new Group(
     ]
 )
 
-
 // Execution
 
-let winner = '';
 // Battle Loop
-for (let i = 0; i < 10; i++) {
+printLog("Combat Start");
+for (let i = 0; i < 20; i++) {
 
-    // If a winner has not been found
-    if (winner.length === 0) {
+    if (BlueForce.sectionsArray[0].units.length === 0) {
+        // End loop
+        printLog("The winner is " + RedForce.name + "!");
+        i = 100;
+    } else if (RedForce.sectionsArray[0].units.length === 0) {
+        // End loop
+        printLog("The winner is " + BlueForce.name + "!");
+        i = 100;
+    } else {
         let combatants = [];
         combatants = combatants.concat(RedForce.sectionsArray);
         combatants = combatants.concat(BlueForce.sectionsArray);
         passTurn(combatants);
-        console.log(RedForce.sectionsArray[0]);
-        console.log(BlueForce.sectionsArray[0]);
-    } else { // End loop
-        if (winner.length !== 0) console.log("The winner is " + winner + ".");
-        i = 11;
+        // console.log(RedForce.sectionsArray[0]);
+        // console.log(BlueForce.sectionsArray[0]);
     }
 
 }
