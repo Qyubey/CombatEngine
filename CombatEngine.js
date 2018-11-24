@@ -124,10 +124,11 @@ const constructString = function (log) {
  */
 const displayCombatants = function (groups) {
     printString("Combatants:");
+    printString("-----");
     groups.forEach(function(group) {
         printString(group.name + ": ");
         group.sectionsArray.forEach(function(section) {
-            printString("--" + section.name + ": Team " + section.team);
+            printString("--" + section.name + ": Team " + section.team + ", Initiative " + section.speed);
             section.units.forEach(function(unit) {
                 let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/10 Hull, " + unit.sp + "/10 Shield, ";
                 unit.wSystems.forEach(function(system) {
@@ -137,6 +138,7 @@ const displayCombatants = function (groups) {
             })
         })
     })
+    printString("=====");
 }
 
 
@@ -276,40 +278,43 @@ const passTurn = function (sectionsArray) {
     // For each section, check if it is the section's turn.
     sectionsArray.forEach(function(activeSection) {
         if (activeSection.speed === 0 && activeSection.state === "active") {
-            logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
 
-            // Filter this section out of the list of sections.
-            // TODO: Filter out friendly sections too.
+            // Filter out invalid targets from sectionsArray
             let targetSectionsArray = sectionsArray.filter(function(target) {
                 return target.name !== activeSection.name && target.units.length > 0 && target.team !== activeSection.team;
             });
 
-            // Select a random section. All units of active section will attack the units within.
-            let targetedSection = selectTarget(targetSectionsArray);
+            // Check that there are valid sections to target.
+            if (targetSectionsArray.length > 0) {
+                logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
 
-            // TODO: Determine Behaviour of Section here.
-            
-            logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " units within.");
-            logArray.push("----------");
+                // Select a random section. All units of active section will attack the units within.
+                let targetedSection = selectTarget(targetSectionsArray);
 
-            activeSection.units.forEach(function(unit) {
+                // TODO: Determine Behaviour of Section here.
+                
+                logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " units within.");
+                logArray.push("----------");
 
-                // TODO: Alter behaviour based on Morale here.
-                // TODO: For each unit in section, execute behaviour.
+                activeSection.units.forEach(function(unit) {
 
-                // Check that there are any possible units left to target in the section.
-                if (targetedSection.units.length > 0) {
-                    behaviourAttack(logArray, unit, targetedSection);
-                } else {
-                    console.log(unit.name + " cannot find any units left in the enemy section.")
-                }
-            });
-            logArray.push("----------");
+                    // TODO: Alter behaviour based on Morale here.
+                    // TODO: For each unit in section, execute behaviour.
+
+                    // Check that there are any possible units left to target in the section.
+                    if (targetedSection.units.length > 0) {
+                        behaviourAttack(logArray, unit, targetedSection);
+                    } else {
+                        console.log(unit.name + " cannot find any units left in the enemy section.")
+                    }
+                });
+                logArray.push("----------");
+            }
 
             // Reset speed/turn timer.
             activeSection.speed = Math.floor(Math.random()*3);
         } else { // If not your turn, tick speed.
-            activeSection.speed -= 1;
+            if (activeSection.state === "active") activeSection.speed -= 1;
         }
     });
 
@@ -488,6 +493,7 @@ for (let i = 0; i < 100; i++) {
         displayCombatants([RedForce, BlueForce]);
         i = 100;
     } else {
+        if (i !== 0 && i % 5 === 0) displayCombatants([RedForce, BlueForce]);
         let combatants = [];
         combatants = combatants.concat(RedForce.sectionsArray);
         combatants = combatants.concat(BlueForce.sectionsArray);
