@@ -43,10 +43,11 @@ function Group (name, sectionsArray, team) {
     this.team = team;
     this.state = 'active'
 }
-function Section (name, units, speed) {
+function Section (name, units, speed, team) {
     this.name = name;
     this.units = units;
     this.speed = speed;
+    this.team = team;
     this.casualties = [];
     this.state = 'active'
 }
@@ -116,6 +117,27 @@ const constructString = function (log) {
 
     return logString;
 };
+
+/**
+ * Displays a general log for an entire group.
+ * @param {*} groups 
+ */
+const displayCombatants = function (groups) {
+    printString("Combatants:");
+    groups.forEach(function(group) {
+        printString(group.name + ": ");
+        group.sectionsArray.forEach(function(section) {
+            printString("--" + section.name + ": Team " + section.team);
+            section.units.forEach(function(unit) {
+                let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/10 Hull, " + unit.sp + "/10 Shield, ";
+                unit.wSystems.forEach(function(system) {
+                    unitString += system.name;
+                })
+                printString(unitString);
+            })
+        })
+    })
+}
 
 
 // Functions
@@ -254,19 +276,21 @@ const passTurn = function (sectionsArray) {
     // For each section, check if it is the section's turn.
     sectionsArray.forEach(function(activeSection) {
         if (activeSection.speed === 0 && activeSection.state === "active") {
-            logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units available.");
-            logArray.push("----------");
+            logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
 
             // Filter this section out of the list of sections.
             // TODO: Filter out friendly sections too.
             let targetSectionsArray = sectionsArray.filter(function(target) {
-                return target.name !== activeSection.name && target.units.length > 0;
+                return target.name !== activeSection.name && target.units.length > 0 && target.team !== activeSection.team;
             });
 
             // Select a random section. All units of active section will attack the units within.
             let targetedSection = selectTarget(targetSectionsArray);
 
             // TODO: Determine Behaviour of Section here.
+            
+            logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " units within.");
+            logArray.push("----------");
 
             activeSection.units.forEach(function(unit) {
 
@@ -303,34 +327,69 @@ let RedForce = new Group(
             "Red Raiders",
             [
                 new Unit("Red Alpha", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
+                    new WeaponSystem("KX-9 Laser Array",
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
                 ], 10, 10, 50),
                 new Unit("Red Beta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
+                    new WeaponSystem("KX-9 Laser Array",
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
                 ], 10, 10, 50),
                 new Unit("Red Gamma", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
+                    new WeaponSystem("KX-9 Laser Array",
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
                 ], 10, 10, 50),
             ],
-            Math.floor(Math.random()*3)
+            Math.floor(Math.random() * 3),
+            1
+        ),
+        new Section(
+            "Red Roaders",
+            [
+                new Unit("Red Delta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array",
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
+                ], 10, 10, 50),
+                new Unit("Red Epsilon", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array",
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
+                ], 10, 10, 50),
+                new Unit("Red Zeta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array",
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
+                ], 10, 10, 50),
+            ],
+            Math.floor(Math.random() * 3),
+            1
         )
     ]
 )
@@ -339,7 +398,7 @@ let BlueForce = new Group(
     "Blue Force",
     [
         new Section(
-            "Blue Pirates",
+            "Blue Band",
             [
                 new Unit("Blue Alpha", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
@@ -369,7 +428,42 @@ let BlueForce = new Group(
                         ])
                 ], 10, 10, 50),
             ],
-            Math.floor(Math.random()*3)
+            Math.floor(Math.random()*3),
+            2
+        ),
+        new Section(
+            "Blue Brigade",
+            [
+                new Unit("Blue Delta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Blue Epsilon", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Blue Zeta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+            ],
+            Math.floor(Math.random()*3),
+            2
         )
     ]
 )
@@ -377,41 +471,21 @@ let BlueForce = new Group(
 // Execution
 
 // Battle Loop
+
 printString("Combat Start");
 printString("=====");
-printString("Combatants:");
-printString(RedForce.name + ": ");
-RedForce.sectionsArray.forEach(function(section) {
-    printString("--" + section.name + ": ");
-    section.units.forEach(function(unit) {
-        let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/10 Hull, " + unit.sp + "/10 Shield, ";
-        unit.wSystems.forEach(function(system) {
-            unitString += system.name;
-        })
-        printString(unitString);
-    })
-})
-printString(BlueForce.name + ": ");
-BlueForce.sectionsArray.forEach(function(section) {
-    printString("--" + section.name + ": ");
-    section.units.forEach(function(unit) {
-        let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/10 Hull, " + unit.sp + "/10 Shield, ";
-        unit.wSystems.forEach(function(system) {
-            unitString += system.name;
-        })
-        printString(unitString);
-    })
-})
-printString("=====");
-for (let i = 0; i < 20; i++) {
+displayCombatants([RedForce, BlueForce]);
+for (let i = 0; i < 100; i++) {
 
-    if (BlueForce.sectionsArray[0].units.length === 0) {
+    if (BlueForce.sectionsArray[0].units.length === 0 && BlueForce.sectionsArray[1].units.length === 0) {
         // End loop
         printString("The winner is " + RedForce.name + "!");
+        displayCombatants([RedForce, BlueForce]);
         i = 100;
-    } else if (RedForce.sectionsArray[0].units.length === 0) {
+    } else if (RedForce.sectionsArray[0].units.length === 0 && RedForce.sectionsArray[1].units.length === 0) {
         // End loop
         printString("The winner is " + BlueForce.name + "!");
+        displayCombatants([RedForce, BlueForce]);
         i = 100;
     } else {
         let combatants = [];
