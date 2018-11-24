@@ -57,6 +57,8 @@ function Unit (name, unitName, wSystems, hp, sp, evasion) {
     this.hp = hp;
     this.sp = sp;
     this.evasion = evasion;
+    this.kills = 0;
+    this.totalDamageDealt = 0;
     this.state = 'active'
 }
 function WeaponSystem (name, weapons) {
@@ -73,26 +75,28 @@ function Weapon (name, damage) {
 
 // Logging
 
-const printLog = function (logString) {
-    const logArray = logString.split("\n");
-    logArray.push("-----");
-    logArray.forEach(function(part) {
-        let para = document.createElement("p");
-        const node = document.createTextNode(part);
-        para.appendChild(node);
+const printString = function (string) {
+    let para = document.createElement("p");
+    const node = document.createTextNode(string);
+    para.appendChild(node);
 
-        let element = document.getElementById("div1");
-        element.appendChild(para);
+    let element = document.getElementById("combatLog");
+    element.appendChild(para);
+}
+
+const printArray = function (logArray) {
+    logArray.forEach(function(part) {
+        printString(part);
     })
 }
 
-const constructLog = function (log) {
+const constructString = function (log) {
     // Record amount of hits, amount of misses.
     // Record total damage to sp and hp
     // Record any kills
     let resultString = "";
     if (log.hits > 0) {
-        resultString += log.atk.name + " hit "    + log.def.name + " " + log.hits   + " times with a " + log.atk.weapons[0].name + "!";
+        resultString += log.atk.name + " landed " + log.hits + " hits this turn.";
         resultString += "\n";
     }
     // if (log.misses > 0) {
@@ -100,11 +104,11 @@ const constructLog = function (log) {
     //     resultString += "\n";
     // }
     if (log.spDam > 0) {
-        resultString += log.def.name + " recieved " + log.spDam + " shield damage.";
+        resultString += log.atk.name + " dealt " + log.spDam + " shield damage.";
         resultString += "\n";
     }
     if (log.hpDam > 0) {
-        resultString += log.def.name + " recieved " + log.hpDam + " hull damage.";
+        resultString += log.atk.name + " dealt " + log.hpDam + " hull damage.";
         resultString += "\n";
     }
     if (log.sBreaks > 0) {
@@ -112,20 +116,7 @@ const constructLog = function (log) {
         resultString += "\n";
     }
     if (log.kills > 0) {
-        resultString += log.def.name + " has been destroyed!";
-        resultString += "\n";
-    }
-    if (resultString.misses === 4) {
-        resultString += "Ya missed everything.";
-        resultString += "\n";
-    }
-    if (resultString.length === 0) {
-        resultString += "Nothing happened.";
-        resultString += "\n";
-    } else {
-        resultString += log.def.name + " Shields: " + log.def.sp + "/10.";
-        resultString += "\n";
-        resultString += log.def.name + " Hull: " + log.def.hp + "/10.";
+        resultString += log.def.name + "Ship has been destroyed.";
         resultString += "\n";
     }
     printLog(resultString);
@@ -168,25 +159,57 @@ const selectTarget = function (array) {
 /**
  * Calculates damage for an attack. Assigns to either shields or hull, and reduces by armour.
  */
-const damageCalc = function (weapon, def) {
+const damageCalc = function (logData, weapon, atk, def) {
+    let logString = "";
     if (def.sp === 0) {
         def.hp -= weapon.damage;
+
+        // Add Log Data
+        logString += atk.name + " dealt " + weapon.damage + " hull damage to " + def.name + ".";
+
         if (def.hp <= 0) {
             def.hp = 0;
             def.state = 'Destroyed';
+
+            // Add Log Data
+            logString += " " + def.name + " has been destroyed!";
+            atk.kills += 1;
+            logData.kills += 1;
+        } else {
+            logString += " " + def.name + ": " + def.hp + "/10 Hull Points.";
         }
+
+        // Add Log Data
+        atk.totalDamageDealt += weapon.damage;
+        logData.hpDam += weapon.damage;
+
     } else {
         def.sp -= weapon.damage;
+
+        // Add Log Data
+        logString += atk.name + " dealt " + weapon.damage + " shield damage to " + def.name + ".";
+
         if (def.sp <= 0) {
             def.sp = 0;
+
+            // Add Log Data
+            logString += " " + def.name + " has lost shields!";
+            logData.sBreak += 1;
+        } else {
+            logString += " " + def.name + ": " + def.sp + "/10 Shield Points.";
         }
+
+        // Add Log Data
+        atk.totalDamageDealt += weapon.damage;
+        logData.spDam += weapon.damage;
     }
+    logData.push(logString);
 };
 
 /**
  * Behaviour for General Unit attack.
  */
-const behaviourAttack = function (atk, targetsArray) {
+const behaviourAttack = function (logData, atk, targetsArray) {
 
     atk.wSystems.forEach(function(system) {
         let targetedSection = selectTarget(targetsArray);
@@ -198,19 +221,23 @@ const behaviourAttack = function (atk, targetsArray) {
             // If we destroy the unit, remove it from targets and into casualties.
             // Check that our target is destroyed before we calc attack.
             system.weapons.forEach(function(weapon) {
+                // If the unit has not been destroyed.
                 if (def.state !== "Destroyed") {
                     const roll = percentileRoll();
 
                     // If attack hits, calculate damage.
                     if (roll >= evasion) {
-                        let combatLog = atk.name + ' hits ' + def.name + " for " + weapon.damage + " damage!";
-                        damageCalc(weapon, def);
-                        printLog(combatLog);
-                        printLog(def.name + ": " + def.hp + "/10 HP " + def.sp + "/10SP");
+
+                        // Log Data
+                        logData.hits += 1;
+
+                        damageCalc(logData, weapon, atk, def);
+
                         if (def.state === "Destroyed") {
-                            printLog(def.name + " Destroyed")
                             removeUnit(def, targetedSection.units, targetedSection.casualties);
                         }
+                    } else {
+                        logData.push(atk.name + " missed a shot.");
                     }
                 }
             })
@@ -222,11 +249,14 @@ const behaviourAttack = function (atk, targetsArray) {
  * Determines if it is the turn for any of the sectionsArray given.
  */
 const passTurn = function (sectionsArray) {
+    // Generate a Log Object
+    let logData = [];
 
     // For each section, determine if it is the section's turn.
     sectionsArray.forEach(function(section) {
         if (section.speed === 0) {
-            printLog(section.name + " takes a turn. " + section.units.length + " units available.");
+            logData.push(section.name + " takes a turn. " + section.units.length + " units available.");
+            logData.push("----------");
 
             // Create possible targets array.
             let targetSectionsArray = sectionsArray.filter(function(target) {
@@ -237,7 +267,9 @@ const passTurn = function (sectionsArray) {
             // TODO: Alter behaviour based on Morale here.
             // TODO: For each unit in section, execute behaviour.
             section.units.forEach(function(unit) {
-                behaviourAttack(unit, targetSectionsArray);
+                logData.push(unit.name + " flies in!");
+                behaviourAttack(logData, unit, targetSectionsArray);
+                logData.push("-----");
             });
 
             // Reset speed/turn timer.
@@ -246,6 +278,8 @@ const passTurn = function (sectionsArray) {
             section.speed -= 1;
         }
     });
+
+    printArray(logData);
 };
 
 
@@ -316,12 +350,12 @@ let BlueForce = new Group(
                 ], 10, 10, 50),
                 new Unit("Blue Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                        new Weapon("KX9 Laser Cannon", 3),
-                    ])
+                        [
+                            new Weapon("KX9 Laser Cannon", 3),
+                            new Weapon("KX9 Laser Cannon", 3),
+                            new Weapon("KX9 Laser Cannon", 3),
+                            new Weapon("KX9 Laser Cannon", 3),
+                        ])
                 ], 10, 10, 50),
             ],
             Math.floor(Math.random()*3)
@@ -332,16 +366,41 @@ let BlueForce = new Group(
 // Execution
 
 // Battle Loop
-printLog("Combat Start");
+printString("Combat Start");
+printString("=====");
+printString("Combatants:");
+printString(RedForce.name + ": ");
+RedForce.sectionsArray.forEach(function(section) {
+    printString("--" + section.name + ": ");
+    section.units.forEach(function(unit) {
+        let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/10 Hull, " + unit.sp + "/10 Shield, ";
+        unit.wSystems.forEach(function(system) {
+            unitString += system.name;
+        })
+        printString(unitString);
+    })
+})
+printString(BlueForce.name + ": ");
+BlueForce.sectionsArray.forEach(function(section) {
+    printString("--" + section.name + ": ");
+    section.units.forEach(function(unit) {
+        let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/10 Hull, " + unit.sp + "/10 Shield, ";
+        unit.wSystems.forEach(function(system) {
+            unitString += system.name;
+        })
+        printString(unitString);
+    })
+})
+printString("=====");
 for (let i = 0; i < 20; i++) {
 
     if (BlueForce.sectionsArray[0].units.length === 0) {
         // End loop
-        printLog("The winner is " + RedForce.name + "!");
+        printString("The winner is " + RedForce.name + "!");
         i = 100;
     } else if (RedForce.sectionsArray[0].units.length === 0) {
         // End loop
-        printLog("The winner is " + BlueForce.name + "!");
+        printString("The winner is " + BlueForce.name + "!");
         i = 100;
     } else {
         let combatants = [];
