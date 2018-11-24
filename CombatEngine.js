@@ -21,7 +21,6 @@
 
 // TODO: Add in more ship types. Fighter, Corvette, Frigate, Capital.
 // Add in more Weapon Systems.
-// Add Ammo to certain weapon types? May need restriction to certain targets or behaviours. Such as Bombs to Bombing Runs, or Buzzdroids to Release Buzzdroids.
 // Refactor Shields. Add Bypass and Drain.
 // Add in Armour reduction. Add Pierce and Shred.
 // Add in Components. Shield Gen, Bridge, Engines, Battery, etc.
@@ -42,9 +41,9 @@
 // TODO: Consider adding distance functionality. Ships must move to engage.
 
 // Templates
-function Group (name, sections, team) {
+function Group (name, sectionsArray, team) {
     this.name = name;
-    this.sections = sections;
+    this.sectionsArray = sectionsArray;
     this.team = team;
     this.state = 'active'
 }
@@ -52,6 +51,7 @@ function Section (name, units, speed) {
     this.name = name;
     this.units = units;
     this.speed = speed;
+    this.casualties = [];
     this.state = 'active'
 }
 function Unit (name, unitName, wSystems, hp, sp) {
@@ -88,65 +88,6 @@ const printLog = function (logString) {
         element.appendChild(para);
     })
 }
-
-/**
- * Returns a random number from 1 to 100.
- * @returns {number}
- */
-const percentileRoll = function () {
-    return Math.floor(Math.random()*100);
-};
-
-/**
- * Calculates damage for an attack. Assigns to either shields or hull, and reduces by armour.
- * @param atk
- * @param def
- * @returns {{hpDam: number, spDam: number, sBreaks: number, kills: number}}
- */
-const damageCalc = function (atk, def) {
-    let log = {hpDam: 0, spDam: 0, sBreaks: 0, kills: 0};
-    if (def.sp === 0) {
-        def.hp -= atk.weapons[0].damage;
-        log.hpDam += atk.weapons[0].damage;
-        if (def.hp <= 0) {
-            def.hp = 0;
-            def.state = 'Destroyed';
-            log.kills += 1;
-        }
-    } else {
-        def.sp -= atk.weapons[0].damage;
-        log.spDam += atk.weapons[0].damage;
-        if (def.sp <= 0) {
-            def.sp = 0;
-            log.sBreaks += 1;
-        }
-    }
-    return log;
-};
-
-/**
- * Rolls an attack, determines if it hits or misses.
- * @param atk
- * @param def
- * @returns {{atk: *, def: *, hits: number, misses: number, hpDam: number, spDam: number, sBreaks: number, kills: number}}
- */
-const actionAttack = function (atk, def) {
-    let log = {atk: atk, def: def, hits: 0, misses: 0, hpDam: 0, spDam: 0, sBreaks: 0, kills: 0};
-    atk.weapons.forEach(function() {
-        const roll = percentileRoll();
-        if (roll >= 50) {
-            let result = damageCalc(atk, def);
-            log.hits += 1;
-            log.hpDam += result.hpDam;
-            log.spDam += result.spDam;
-            log.sBreaks += result.sBreaks;
-            log.kills += result.kills;
-        } else {
-            log.misses += 1;
-        }
-    });
-    return log;
-};
 
 /**
  * Creates a string log for the recent action from a log object.
@@ -200,19 +141,14 @@ const constructLog = function (log) {
 };
 
 /**
- * Run combat between an attacker and a defender
- * @param atk
- * @param def
+ * Returns a random number from 1 to 100.
  */
-const executeCombat = function (atk, def) {
-    const log = constructLog(actionAttack(atk, def));
-    console.log(log);
+const percentileRoll = function () {
+    return Math.floor(Math.random()*100);
 };
 
 /**
  * Returns a random active element from the given array.
- * @param array
- * @returns {*}
  */
 const selectTarget = function (array) {
     let validTargets = array.filter(function(element) {
@@ -222,43 +158,77 @@ const selectTarget = function (array) {
 };
 
 /**
- * Determines if it is the turn for any of the sections given.
- * @param sections
+ * Calculates damage for an attack. Assigns to either shields or hull, and reduces by armour.
  */
-const passTurn = function (sections) {
+const damageCalc = function (weapon, def) {
+    if (def.sp === 0) {
+        def.hp -= weapon.damage;
+        if (def.hp <= 0) {
+            def.hp = 0;
+            def.state = 'Destroyed';
+        }
+    } else {
+        def.sp -= weapon.damage;
+        if (def.sp <= 0) {
+            def.sp = 0;
+        }
+    }
+};
+
+/**
+ * Behaviour for General Unit attack.
+ */
+const behaviourAttack = function (atk, targetsArray) {
+
+    // TODO: For each weapon system, choose a target.
+    atk.wSystems.forEach(function(system) {
+        const targetedSection = selectTarget(targetsArray);
+        const def = selectTarget(targetedSection.units);
+        // TODO: Make evasion dependant on def.
+        const evasion = 50;
+        
+        // For each weapon, roll an attack and resolve the damage
+        system.weapons.forEach(function(weapon) {
+            const roll = percentileRoll();
+            if (roll >= evasion) {
+                // Attack hits
+                console.log('Hit');
+                let result = damageCalc(weapon, def);
+            }
+        })
+
+        console.log(atk);
+        console.log(def);
+    })
+};
+
+/**
+ * Determines if it is the turn for any of the sectionsArray given.
+ */
+const passTurn = function (sectionsArray) {
     let targetUp = true;
     // For each section, determine if it is the section's turn.
-    sections.forEach(function(section) {
+    sectionsArray.forEach(function(section) {
         if (section.speed === 0) {
             console.log(section.name + " takes a turn.");
             printLog(section.name + " takes a turn.");
 
-            // Filter this section out of the sections array, and choose a section to attack.
-            let targets = sections;
-            targets = targets.filter(function(target) {
+            // Create possible targets array.
+            let targetsArray = sectionsArray.filter(function(target) {
                 return target.name !== section.name;
             });
-            let targetedSection = selectTarget(targets);
 
-            // For each Unit in this section, select a Unit in the targeted section and execute attack.
+            // TODO: Determine Behaviour of Section here.
+            // TODO: Alter behaviour based on Morale here.
+            // TODO: For each unit in section, execute behaviour.
             section.units.forEach(function(unit) {
-                if (unit.state === 'active') {
-                    let atk = unit;
-                    let def = selectTarget(targetedSection.units);
-                    executeCombat(atk, def);
-                }
+                behaviourAttack(unit, targetsArray);
             });
-            let activeTargets = targetedSection.units.filter(function(unit) {
-                return unit.state === 'active';
-            });
-            if (activeTargets.length === 0) winner = section.name;
 
             // Reset speed/turn timer.
             section.speed = Math.floor(Math.random()*3);
-            return targetUp;
         } else { // If not your turn, tick speed.
             section.speed -= 1;
-            return targetUp;
         }
     });
 };
@@ -266,13 +236,13 @@ const passTurn = function (sections) {
 
 // Setup
 
-let TestForce = new Group(
+let RedForce = new Group(
     "Red Force",
     [
         new Section(
-            "Testers",
+            "Red Raiders",
             [
-                new Unit(name, "T65 X-Wing", [
+                new Unit("Red Alpha", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
                         new Weapon("KX9 Laser Cannon", 3),
@@ -280,39 +250,88 @@ let TestForce = new Group(
                         new Weapon("KX9 Laser Cannon", 3),
                         new Weapon("KX9 Laser Cannon", 3),
                     ])
-                ], 10, 10)
+                ], 10, 10),
+                new Unit("Red Beta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                    ])
+                ], 10, 10),
+                new Unit("Red Gamma", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                    ])
+                ], 10, 10),
             ],
             3
         )
     ]
 )
 
-// let RedForce = new Group('Red Force', [
-//     new Section('Red Raiders', [
-//         new XWing('Red Alpha'),
-//         new XWing('Red Beta'),
-//         new XWing('Red Gamma'),
-//     ], Math.floor(Math.random()*3) )
-// ])
-// let BlueForce = new Group('Blue Force', [
-//     new Section('Blue Pirates', [
-//         new XWing('Blue Alpha'),
-//         new XWing('Blue Beta'),
-//         new XWing('Blue Gamma'),
-//     ], Math.floor(Math.random()*3) )
-// ])
+let BlueForce = new Group(
+    "Blue Force",
+    [
+        new Section(
+            "Blue Pirates",
+            [
+                new Unit("Blue Alpha", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                    ])
+                ], 10, 10),
+                new Unit("Blue Alpha", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                    ])
+                ], 10, 10),
+                new Unit("Blue Alpha", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                    ])
+                ], 10, 10),
+            ],
+            3
+        )
+    ]
+)
 
 
 // Execution
 
-console.log(TestForce.sections[0].units);
+console.log(RedForce);
 
-// let winner = '';
-// for (let i = 0; i < 10; i++) {
-//     if (winner.length === 0) {
-//         passTurn([RedForce, BlueForce]);
-//     } else {
-//         console.log("The winner is " + winner + ".");
-//         i = 11;
-//     }
-// }
+let winner = '';
+// Battle Loop
+for (let i = 0; i < 10; i++) {
+
+    // If a winner has not been found
+    if (winner.length === 0) {
+        let combatants = [];
+        combatants = combatants.concat(RedForce.sectionsArray);
+        combatants = combatants.concat(BlueForce.sectionsArray);
+        passTurn(combatants);
+    } else { // End loop
+        if (winner.length !== 0) console.log("The winner is " + winner + ".");
+        i = 11;
+    }
+
+}
