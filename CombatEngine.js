@@ -43,7 +43,7 @@ function Group (name, sections, team) {
     this.team = team;
     this.state = 'active'
 }
-function Section (name, units, speed, team) {
+function Section (name, units, speed) {
     this.name = name;
     this.units = units;
     this.speed = speed;
@@ -125,7 +125,7 @@ const displayCombatants = function (groups) {
     printString("Combatants:");
     printString("-----");
     groups.forEach(function(group) {
-        printString(group.name + ": ");
+        printString(group.name + ": Team " + group.team);
         group.sections.forEach(function(section) {
             printString("--" + section.name + ", Initiative " + section.speed);
             section.units.forEach(function(unit) {
@@ -284,7 +284,7 @@ const passTurn = function (groupArray) {
                 // Generate a list of target sections.
                 let targetSectionsArray = [];
                 groupArray.forEach (function (targetGroup){
-                    if (activeGroup.name !== targetGroup.name){
+                    if (activeGroup.team !== targetGroup.team){
                         targetSectionsArray = targetSectionsArray.concat(targetGroup.sections);
                     }
                 })
@@ -408,7 +408,7 @@ let RedForce = new Group(
             ],
             Math.floor(Math.random() * 3)
         )
-    ]
+    ], 1
 )
 
 let BlueForce = new Group(
@@ -480,7 +480,7 @@ let BlueForce = new Group(
             ],
             Math.floor(Math.random()*3)
         )
-    ]
+    ], 2
 )
 
 // Execution
