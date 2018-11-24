@@ -214,7 +214,7 @@ const behaviourAttack = function (logArray, atk, targetSection) {
 
         // For each weapon, roll an attack and resolve the damage
         // If we destroy the unit, remove it from targets and into casualties.
-        // Check that our target is destroyed before we calc attack.
+        // If target is not active, all shots miss.
         system.weapons.forEach(function(weapon) {
             // If the unit has not been destroyed.
             if (def.state === "active") {
@@ -230,6 +230,8 @@ const behaviourAttack = function (logArray, atk, targetSection) {
 
                     if (def.state === "destroyed") {
                         removeUnit(def, targetSection.units, targetSection.casualties);
+                        if (targetSection.units.length === 0) targetSection.state = "destroyed";
+                        console.log("All units in " + targetSection.name + " destroyed.");
                     }
                 }
             } else {
@@ -251,8 +253,7 @@ const passTurn = function (sectionsArray) {
 
     // For each section, check if it is the section's turn.
     sectionsArray.forEach(function(activeSection) {
-        if (activeSection.speed === 0) {
-            logArray.push("----------");
+        if (activeSection.speed === 0 && activeSection.state === "active") {
             logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units available.");
             logArray.push("----------");
 
@@ -279,6 +280,7 @@ const passTurn = function (sectionsArray) {
                     console.log(unit.name + " cannot find any units left in the enemy section.")
                 }
             });
+            logArray.push("----------");
 
             // Reset speed/turn timer.
             activeSection.speed = Math.floor(Math.random()*3);
