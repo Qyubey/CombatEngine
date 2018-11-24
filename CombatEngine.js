@@ -528,7 +528,7 @@ let BlueForce = new Group(
             ],
             Math.floor(Math.random()*3)
         )
-    ], 2
+    ], 1
 )
 
 let GreenForce = new Group(
@@ -600,7 +600,7 @@ let GreenForce = new Group(
             ],
             Math.floor(Math.random()*3)
         )
-    ], 3
+    ], 2
 )
 
 let YellowForce = new Group(
@@ -672,7 +672,7 @@ let YellowForce = new Group(
             ],
             Math.floor(Math.random()*3)
         )
-    ], 4
+    ], 2
 )
 
 // Execution
