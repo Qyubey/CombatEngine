@@ -73,29 +73,6 @@ function Weapon (name, damage) {
     this.state = 'active'
 }
 
-// Weapons
-function KX9LaserCannon () {
-    new Weapon ("KX9 Laser Cannon", 3)
-}
-
-// Weapon Systems
-function XWingLasers () {
-    new WeaponSystem(
-        "KX-9 Laser Array", 
-        [
-            new KX9LaserCannon(),
-            new KX9LaserCannon(),
-            new KX9LaserCannon(),
-            new KX9LaserCannon(),
-        ]
-    );
-}
-
-// Units
-function XWing (name) {
-    new Unit(name, "T65 X-Wing", new XWingLasers(), 10, 10);
-}
-
 
 // Functions
 
@@ -295,7 +272,15 @@ let TestForce = new Group(
         new Section(
             "Testers",
             [
-                new Unit(name, "T65 X-Wing", new XWingLasers(), 10, 10)
+                new Unit(name, "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                        new Weapon("KX9 Laser Cannon", 3),
+                    ])
+                ], 10, 10)
             ],
             3
         )
