@@ -1,0 +1,43 @@
+
+
+            // Define constructors for generalized Unit types
+            // construct Army array based on Section array, construct Section array from Unit names.
+                // Unit data taken from external file
+            // Assign speed to each Section by adding random number
+
+            // Loop and iterate each Section's speed down 1 per loop. Per loop:
+                // If Section's speed reaches 0, it takes a turn.
+                // Section determines action for the turn based on weighted options.
+                // Iterate through each Unit in Section. Disabled or Destroyed Units are ignored. For each Unit:
+                    // If morale low, re-determine action for individual Unit (such as escape or panic)
+                    // Execute action:
+
+                        // If attack:
+                            // Get the target Section and select a Unit within.
+                            // For each valid weapon system on the Unit:
+                                // Roll for attack, add modifiers, determine if hit. If miss, pass resolution. If hit:
+                                    // Assign damage to shields if they exists. Some weapons drain or bypass shields.
+                                    // Reduce damage by armour if it exists. Some weapons shred or pierce armour.
+                                    // Assign damage to hull/health.
+                                    // If attack is severe, damage a Component.
+                                        // Severe damage is based on attack damage
+                                    // If Unit HP below threshold but above 0, disable it.
+                                    // If Unit HP at or below 0, destroy it.
+
+                        // If bombing run:
+                            // Get the target Section and select a Unit within.
+                            // Execute Point Defence if it exists on target Unit. For each valid weapon system:
+                                // Attack function defined above.
+                            // Execute Bombing Run on target. For each valid weapon system:
+                                // Attack function defined above.
+                            // Execute Point Defence if it exists on target Unit. For each valid weapon system:
+                                // Attack function defined above.
+
+                // Assign new speed to the Unit.
+                // Optional: Remove destroyed Units from Section and place in separate Casualties array.
+                // Log result of the turn. Record each turn as it comes up:
+                    // Each Section taking a turn.
+                    // Action for Section. Action if Unit action differed.
+                    // Any hits, and the damage dealt where.
+                    // Any destroyed or disabled targets.
+                    // Summary of the action.
