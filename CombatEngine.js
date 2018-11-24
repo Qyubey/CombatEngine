@@ -179,6 +179,51 @@ const selectTarget = function (array) {
     return validTargets[Math.floor(Math.random()*validTargets.length)];
 };
 
+const checkGroups = function (allGroups) {
+    allGroups.forEach(function (group) {
+        if (group.state === "active") {
+            let activeSections = 0;
+            group.sections.forEach(function(section) {
+                if (section.state === "active") activeSections += 1;
+            });
+            if (activeSections === 0) {
+                group.state = "destroyed";
+                console.log(group.name + " has been destroyed.")
+            }
+        }
+    })
+}
+
+/**
+ * Checks how many teams are still active in the fight.
+ * @param {*} combatants    List of all combatantants
+ */
+const checkTeams = function (combatants) {
+    // Get list of all teams
+    let teams = new Set;
+    combatants.forEach (function(group) {
+        teams.add(group.team);
+    });
+    // Create a counter for each team
+    let teamCounter = new Object;
+    teams.forEach(function(team) {
+        teamCounter[team] = new Object;
+        teamCounter[team].count = 0;
+        teamCounter[team].name = team;
+    })
+    // Add one for each active group on the designated team
+    combatants.forEach(function(combatant) {
+        if (combatant.state === "active") teamCounter[combatant.team].count += 1;
+    });
+    // Check how many team counts are above 0.
+    let remainingTeams = 0;
+    teams.forEach(function(team) {
+        if (teamCounter[team].count > 0) remainingTeams += 1;
+    })
+    // Return the list of active teams.
+    return remainingTeams;
+}
+
 /**
  * Calculates damage for an attack. Assigns to either shields or hull, and reduces by armour.
  */
@@ -221,7 +266,7 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
  * Behaviour for General Unit attack.
  */
 const behaviourAttack = function (logArray, atk, targetSection) {
-    let logObjTurn = {};
+    let logObjTurn = new Object;
     logObjTurn.hits = 0;
     logObjTurn.atk = atk;
     logObjTurn.hpDam = 0;
@@ -253,8 +298,10 @@ const behaviourAttack = function (logArray, atk, targetSection) {
 
                     if (def.state === "destroyed") {
                         removeUnit(def, targetSection.units, targetSection.casualties);
-                        if (targetSection.units.length === 0) targetSection.state = "destroyed";
-                        console.log("All units in " + targetSection.name + " destroyed.");
+                        if (targetSection.units.length === 0) {
+                            targetSection.state = "destroyed";
+                            console.log("All units in " + targetSection.name + " destroyed.");
+                        }
                     }
                 }
             } else {
@@ -272,7 +319,7 @@ const behaviourAttack = function (logArray, atk, targetSection) {
  */
 const passTurn = function (groupArray) {
     // Generate a Log Array
-    let logArray = [];
+    let logArray = new Array;
 
     // Iterate through each group
     groupArray.forEach (function (activeGroup){
@@ -282,7 +329,7 @@ const passTurn = function (groupArray) {
             if (activeSection.speed === 0 && activeSection.state === "active") {
 
                 // Generate a list of target sections.
-                let targetSectionsArray = [];
+                let targetSectionsArray = new Array;
                 groupArray.forEach (function (targetGroup){
                     if (activeGroup.team !== targetGroup.team){
                         targetSectionsArray = targetSectionsArray.concat(targetGroup.sections);
@@ -317,6 +364,9 @@ const passTurn = function (groupArray) {
                         } else {
                             console.log(unit.name + " cannot find any units left in the enemy section.")
                         }
+
+                        // Check if any group has been completely destroyed
+                        checkGroups(groupArray);
                     });
                     logArray.push("----------");
                 }
@@ -329,8 +379,6 @@ const passTurn = function (groupArray) {
         });
 
     })
-
-    
 
     // Print log array.
     printArray(logArray);
@@ -483,29 +531,181 @@ let BlueForce = new Group(
     ], 2
 )
 
+let GreenForce = new Group(
+    "Green Force",
+    [
+        new Section(
+            "Green Garrison",
+            [
+                new Unit("Green Alpha", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Green Beta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Green Gamma", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
+                ], 10, 10, 50),
+            ],
+            Math.floor(Math.random()*3)
+        ),
+        new Section(
+            "Green Guass",
+            [
+                new Unit("Green Delta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Green Epsilon", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Green Zeta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+            ],
+            Math.floor(Math.random()*3)
+        )
+    ], 3
+)
+
+let YellowForce = new Group(
+    "Yellow Force",
+    [
+        new Section(
+            "Yellow Yattas",
+            [
+                new Unit("Yellow Alpha", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Yellow Beta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Yellow Gamma", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                        [
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                            new Weapon("KX9 Laser Cannon", 5),
+                        ])
+                ], 10, 10, 50),
+            ],
+            Math.floor(Math.random()*3)
+        ),
+        new Section(
+            "Yellow Yard",
+            [
+                new Unit("Yellow Delta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Yellow Epsilon", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+                new Unit("Yellow Zeta", "T65 X-Wing", [
+                    new WeaponSystem("KX-9 Laser Array", 
+                    [
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                        new Weapon("KX9 Laser Cannon", 5),
+                    ])
+                ], 10, 10, 50),
+            ],
+            Math.floor(Math.random()*3)
+        )
+    ], 4
+)
+
 // Execution
 
 // Battle Loop
+let combatants = new Array;
+combatants.push(RedForce);
+combatants.push(BlueForce);
+combatants.push(GreenForce);
+combatants.push(YellowForce);
 
 printString("Combat Start");
 printString("=====");
-displayCombatants([RedForce, BlueForce]);
+displayCombatants(combatants);
 for (let i = 0; i < 100; i++) {
-
-    if (BlueForce.sections[0].units.length === 0 && BlueForce.sections[1].units.length === 0) {
-        printString("The winner is " + RedForce.name + "!");
-        displayCombatants([RedForce, BlueForce]);
+    const remainingTeams = checkTeams(combatants);
+    
+    if (remainingTeams === 1) {
+        combatants.forEach(function(combatant) {
+            if (combatant.state === "active") {
+                printString("The winner is " + combatant.name + "!");
+                displayCombatants(combatants);
+                i = 100;
+            }
+        })
+    } else if (remainingTeams === 0) {
+        printString("Somehow, everyone is dead. Whoops!");
+        displayCombatants(combatants);
         i = 100;
-    } else if (RedForce.sections[0].units.length === 0 && RedForce.sections[1].units.length === 0) {
-        printString("The winner is " + BlueForce.name + "!");
-        displayCombatants([RedForce, BlueForce]);
-        i = 100;
-
-    } else {
-        if (i !== 0 && i % 5 === 0) displayCombatants([RedForce, BlueForce]);
-        let combatants = [];
-        combatants.push(RedForce);
-        combatants.push(BlueForce);
+    }
+    
+    else {
+        if (i !== 0 && i % 5 === 0) displayCombatants(combatants);
         passTurn(combatants);
     }
 
