@@ -553,8 +553,6 @@ let BlueForce = construct(
 
 // Execution
 
-console.log(RedForce);
-
 // Battle Loop
 let combatants = new Array;
 combatants.push(RedForce);
