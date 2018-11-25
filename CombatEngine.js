@@ -4,7 +4,7 @@
 
 // Refactor Weapon Range.
 
-// Add in more ship types. Fighter, Corvette, Frigate, Capital.
+// Add in ship types. Fighter, Corvette, Frigate, Capital.
 // Refactor Shields. Add Bypass and Drain.
 // Add in Armour reduction. Add Pierce and Shred.
 // Add in Components. Shield Gen, Bridge, Engines, Battery, etc.
@@ -207,8 +207,20 @@ const displayCombatants = function (groups) {
                 })
                 printString(unitString);
             })
-            if (section.casualties.length > 0) printString("Casualties: " + section.casualties.length);
-            if (section.escapees.length > 0) printString("Escapees: " + section.escapees.length);
+            if (section.casualties.length > 0) {
+                let casualtyString = "Casualties: " + section.casualties.length + " - ";
+                section.casualties.forEach(function(casualty) {
+                    casualtyString += casualty.name + ", ";
+                })
+                printString(casualtyString);
+            }
+            if (section.escapees.length > 0) {
+                let escapeeString = "Escapees: " + section.escapees.length + " - ";
+                section.escapees.forEach(function(escapee) {
+                    escapeeString += escapee.name + ", ";
+                })
+                printString(escapeeString);
+            }
         })
     })
     printString("=====");
@@ -634,6 +646,14 @@ const KX9LaserCannon = [
     15,
     "close"
 ]
+const LS1LaserCannon = [
+    "L-S1 Laser Cannon",
+    1,
+    3,
+    "energy",
+    15,
+    "close"
+]
 const H9Turbolaser = [
     "H9 Turbolaser",
     5,
@@ -667,6 +687,13 @@ const KX9LaserArray = [
         construct(Weapon, KX9LaserCannon),
         construct(Weapon, KX9LaserCannon),
         construct(Weapon, KX9LaserCannon)
+    ]
+]
+const LS1LaserArray = [
+    "L-S1 Laser Array",
+    [
+        construct(Weapon, LS1LaserCannon),
+        construct(Weapon, LS1LaserCannon)
     ]
 ]
 const H9TurbolaserTurret = [
@@ -810,6 +837,7 @@ const NK7IonCannonx10 = [
     ]
 ]
 
+// Fighters
 const XWing = [
     "T65 X-Wing",
     "Fighter",
@@ -823,6 +851,20 @@ const XWing = [
     ],
     [behaviourCloseAttack]
 ];
+const TIEFighter = [
+    "TIE/LN Starfighter",
+    "Fighter",
+    10,
+    0,
+    0,
+    2,
+    50,
+    [
+        construct(WeaponSystem, LS1LaserArray, ["primary"])
+    ],
+    [behaviourCloseAttack]
+];
+// Corvettes
 const CR90Corvette = [
     "CR90 'Corellian' Corvette",
     "Corvette",
@@ -841,6 +883,8 @@ const CR90Corvette = [
     ],
     [behaviourLongAttack]
 ];
+// Frigates
+// Capitals
 const Imperial1 = [
     "Imperial I-class Star Destroyer",
     "Capital",
@@ -889,24 +933,62 @@ let RedForce = new Group(
     [
         new Section(
             [
-                // construct(Unit, Imperial1, ["Imperial-1"]),
                 construct(Unit, XWing, ["Red Alpha"]),
                 construct(Unit, XWing, ["Red Beta"]),
                 construct(Unit, XWing, ["Red Gamma"]),
                 construct(Unit, XWing, ["Red Delta"]),
-                construct(Unit, XWing, ["Red Epsilon"]),
-                construct(Unit, XWing, ["Red Zeta"]),
+                // construct(Unit, XWing, ["Red Epsilon"]),
+                // construct(Unit, XWing, ["Red Zeta"]),
                 // construct(Unit, CR90Corvette, ["Blockrunner"]),
                 // construct(Unit, CR90Corvette, ["Hammerhead"]),
             ],
-            "Red Raiders"
+            "Red Raiders 1"
         ),
         new Section(
             [
-                construct(Unit, CR90Corvette, ["Blockrunner"]),
+                construct(Unit, XWing, ["Red Alpha"]),
+                construct(Unit, XWing, ["Red Beta"]),
+                construct(Unit, XWing, ["Red Gamma"]),
+                construct(Unit, XWing, ["Red Delta"]),
+                // construct(Unit, XWing, ["Red Epsilon"]),
+                // construct(Unit, XWing, ["Red Zeta"]),
+                // construct(Unit, CR90Corvette, ["Blockrunner"]),
+                // construct(Unit, CR90Corvette, ["Hammerhead"]),
             ],
-            "Red Corvette"
+            "Red Raiders 2"
         ),
+        new Section(
+            [
+                construct(Unit, XWing, ["Red Alpha"]),
+                construct(Unit, XWing, ["Red Beta"]),
+                construct(Unit, XWing, ["Red Gamma"]),
+                construct(Unit, XWing, ["Red Delta"]),
+                // construct(Unit, XWing, ["Red Epsilon"]),
+                // construct(Unit, XWing, ["Red Zeta"]),
+                // construct(Unit, CR90Corvette, ["Blockrunner"]),
+                // construct(Unit, CR90Corvette, ["Hammerhead"]),
+            ],
+            "Red Raiders 3"
+        ),
+        new Section(
+            [
+                construct(Unit, XWing, ["Red Alpha"]),
+                construct(Unit, XWing, ["Red Beta"]),
+                construct(Unit, XWing, ["Red Gamma"]),
+                construct(Unit, XWing, ["Red Delta"]),
+                // construct(Unit, XWing, ["Red Epsilon"]),
+                // construct(Unit, XWing, ["Red Zeta"]),
+                // construct(Unit, CR90Corvette, ["Blockrunner"]),
+                // construct(Unit, CR90Corvette, ["Hammerhead"]),
+            ],
+            "Red Raiders 4"
+        ),
+        // new Section(
+        //     [
+        //         construct(Unit, CR90Corvette, ["Blockrunner"]),
+        //     ],
+        //     "Red Corvette"
+        // ),
     ],
     "Red Force",
     1
@@ -914,11 +996,79 @@ let RedForce = new Group(
 
 let BlueForce = new Group(
     [
+        // new Section(
+        //     [
+        //         construct(Unit, Imperial1, ["Imperial-1"])
+        //     ],
+        //     "Blue Star"
+        // ),
         new Section(
             [
-                construct(Unit, Imperial1, ["Imperial-1"])
+                construct(Unit, TIEFighter, ["TIE-1"]),
+                construct(Unit, TIEFighter, ["TIE-2"]),
+                construct(Unit, TIEFighter, ["TIE-3"]),
+                construct(Unit, TIEFighter, ["TIE-4"]),
+                construct(Unit, TIEFighter, ["TIE-5"]),
+                construct(Unit, TIEFighter, ["TIE-6"]),
+                construct(Unit, TIEFighter, ["TIE-7"]),
+                construct(Unit, TIEFighter, ["TIE-8"]),
+                construct(Unit, TIEFighter, ["TIE-9"]),
+                construct(Unit, TIEFighter, ["TIE-10"]),
+                construct(Unit, TIEFighter, ["TIE-11"]),
+                construct(Unit, TIEFighter, ["TIE-12"]),
             ],
-            "Blue Band"
+            "TIE Squadron 1"
+        ),
+        new Section(
+            [
+                construct(Unit, TIEFighter, ["TIE-1"]),
+                construct(Unit, TIEFighter, ["TIE-2"]),
+                construct(Unit, TIEFighter, ["TIE-3"]),
+                construct(Unit, TIEFighter, ["TIE-4"]),
+                construct(Unit, TIEFighter, ["TIE-5"]),
+                construct(Unit, TIEFighter, ["TIE-6"]),
+                construct(Unit, TIEFighter, ["TIE-7"]),
+                construct(Unit, TIEFighter, ["TIE-8"]),
+                construct(Unit, TIEFighter, ["TIE-9"]),
+                construct(Unit, TIEFighter, ["TIE-10"]),
+                construct(Unit, TIEFighter, ["TIE-11"]),
+                construct(Unit, TIEFighter, ["TIE-12"]),
+            ],
+            "TIE Squadron 2"
+        ),
+        new Section(
+            [
+                construct(Unit, TIEFighter, ["TIE-1"]),
+                construct(Unit, TIEFighter, ["TIE-2"]),
+                construct(Unit, TIEFighter, ["TIE-3"]),
+                construct(Unit, TIEFighter, ["TIE-4"]),
+                construct(Unit, TIEFighter, ["TIE-5"]),
+                construct(Unit, TIEFighter, ["TIE-6"]),
+                construct(Unit, TIEFighter, ["TIE-7"]),
+                construct(Unit, TIEFighter, ["TIE-8"]),
+                construct(Unit, TIEFighter, ["TIE-9"]),
+                construct(Unit, TIEFighter, ["TIE-10"]),
+                construct(Unit, TIEFighter, ["TIE-11"]),
+                construct(Unit, TIEFighter, ["TIE-12"]),
+            ],
+            "TIE Squadron 3"
+        ),
+        new Section(
+            [
+                construct(Unit, TIEFighter, ["TIE-1"]),
+                construct(Unit, TIEFighter, ["TIE-2"]),
+                construct(Unit, TIEFighter, ["TIE-3"]),
+                construct(Unit, TIEFighter, ["TIE-4"]),
+                construct(Unit, TIEFighter, ["TIE-5"]),
+                construct(Unit, TIEFighter, ["TIE-6"]),
+                construct(Unit, TIEFighter, ["TIE-7"]),
+                construct(Unit, TIEFighter, ["TIE-8"]),
+                construct(Unit, TIEFighter, ["TIE-9"]),
+                construct(Unit, TIEFighter, ["TIE-10"]),
+                construct(Unit, TIEFighter, ["TIE-11"]),
+                construct(Unit, TIEFighter, ["TIE-12"]),
+            ],
+            "TIE Squadron 4"
         ),
     ],
     "Blue Force",
@@ -943,6 +1093,12 @@ let GreenForce = new Group(
             ],
             "Green Garrison"
         ),
+        new Section(
+            [
+                construct(Unit, CR90Corvette, ["Blockrunner"]),
+            ],
+            "Green Corvette"
+        ),
     ],
     "Green Force",
     3
@@ -955,8 +1111,8 @@ console.log(GreenForce)
 // Battle Loop
 let combatants = new Array;
 combatants.push(RedForce);
-// combatants.push(BlueForce);
-combatants.push(GreenForce);
+combatants.push(BlueForce);
+// combatants.push(GreenForce);
 // combatants.push(YellowForce);
 
 combatants.forEach(function(combatant) {
