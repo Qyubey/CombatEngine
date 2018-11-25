@@ -191,7 +191,6 @@ const constructString = function (log) {
 
 /**
  * Displays a general status log for all groups.
- * @param {*} groups 
  */
 const displayCombatants = function (groups) {
     printString("Combatants:");
@@ -208,6 +207,8 @@ const displayCombatants = function (groups) {
                 })
                 printString(unitString);
             })
+            if (section.casualties.length > 0) printString("Casualties: " + section.casualties.length);
+            if (section.escapees.length > 0) printString("Escapees: " + section.escapees.length);
         })
     })
     printString("=====");
@@ -312,6 +313,18 @@ const hasPointDefense = function (section) {
         });
     }) 
     return pdFound;
+}
+
+/**
+ * Find the highest speed of units within the section
+ */
+const setSpeed = function (section) {
+    let highestSpeed = 0;
+    section.units.forEach(function(unit) {
+        if (unit.speed > highestSpeed) highestSpeed = unit.speed;
+    })
+    // section.speed = Math.floor(Math.random()*highestSpeed);
+    section.speed = highestSpeed;
 }
 
 // Attack functions
@@ -461,7 +474,7 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
 
 // CloseAttack: Unit attacks at close range using Primary weapons. PD retaliation.
 const behaviourCloseAttack = function (logArray, atk, targetSection) {
-    logArray.push(atk.name + " initiates close attack.");
+    logArray.push(atk.name + " initiates a close-range attack.");
     let activeSetting = "primary";
     let engageRange = "close";
 
@@ -470,7 +483,7 @@ const behaviourCloseAttack = function (logArray, atk, targetSection) {
 }
 // LongAttack: Unit attacks at long range using Primary weapons. No PD.
 const behaviourLongAttack = function (logArray, atk, targetSection) {
-    logArray.push(atk.name + " initiates long attack.");
+    logArray.push(atk.name + " initiates a long-range attack.");
     let activeSetting = "primary";
     let engageRange = "long";
 
@@ -495,9 +508,7 @@ const behaviourPD = function (logArray, atk, targetSection) {
 
     selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
 }
-/**
- * Behaviour for General Unit attack.
- */
+// Debug: Behaviour for general unit attack.
 const behaviourAttack = function (logArray, atk, targetSection) {
     logArray.push(atk.name + " initiates general attack.");
     let activeSetting = "primary";
@@ -582,8 +593,7 @@ const passTurn = function (groupArray) {
                         // Check for Conditional Behaviour, such as Fleeing.
                         if (unit.hp <= 3) {
                             logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
-                            sectionBehaviour = behaviourFlee;
-                            sectionBehaviour(logArray, unit, activeSection);
+                            behaviourFlee(logArray, unit, activeSection);
                         } else {
                             // Check that there are any possible units left to target in the section.
                             if (targetedSection.units.length > 0) {
@@ -621,7 +631,7 @@ const KX9LaserCannon = [
     1,
     5,
     "energy",
-    25,
+    15,
     "close"
 ]
 const H9Turbolaser = [
@@ -629,7 +639,7 @@ const H9Turbolaser = [
     5,
     10,
     "energy",
-    -10,
+    0,
     "long"
 ]
 const XX9HeavyTurbolaser = [
@@ -637,7 +647,7 @@ const XX9HeavyTurbolaser = [
     20,
     30,
     "energy",
-    -25,
+    -15,
     "long"
 ]
 const NK7IonCannon = [
@@ -645,7 +655,7 @@ const NK7IonCannon = [
     10,
     20,
     "ion",
-    -20,
+    -10,
     "long"
 ]
 
@@ -891,6 +901,12 @@ let RedForce = new Group(
             ],
             "Red Raiders"
         ),
+        new Section(
+            [
+                construct(Unit, CR90Corvette, ["Blockrunner"]),
+            ],
+            "Red Corvette"
+        ),
     ],
     "Red Force",
     1
@@ -902,7 +918,7 @@ let BlueForce = new Group(
             [
                 construct(Unit, Imperial1, ["Imperial-1"])
             ],
-            "Blue Ball"
+            "Blue Band"
         ),
     ],
     "Blue Force",
@@ -935,18 +951,6 @@ let GreenForce = new Group(
 // Execution
 
 console.log(GreenForce)
-
-/**
- * Find the highest speed of units within the section
- */
-const setSpeed = function (section) {
-    let highestSpeed = 0;
-    section.units.forEach(function(unit) {
-        if (unit.speed > highestSpeed) highestSpeed = unit.speed;
-    })
-    // section.speed = Math.floor(Math.random()*highestSpeed);
-    section.speed = highestSpeed;
-}
 
 // Battle Loop
 let combatants = new Array;
