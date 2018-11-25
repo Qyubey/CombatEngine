@@ -1,65 +1,83 @@
 // SW
 
-// TODO: Refactor loops so they cancel out when there are no valid targets.
+// TODO List
 
-// TODO: Add web functionality. Set up armies and manually play turns from HTML.
-// Log combat turns to HTML properly.
+// Create functions to assemble units from fed data, rather than a huge const.
 
-// TODO: List all details of all Units, Weapons, Components to external file.
-// Allow easy construction of units from said file.
-// Export behaviour functions to external file. Clears up space.
-
-// TODO: Add in behaviour functions for fleeing and panic.
-// Add a morale function to check if unit should change behaviour.
-// Add in Disabled function for when ship hull gets low enough.
-// Move Disabled ships into Disabled array.
-// Disabled array is targetable for Aggressive Attack.
-
-// TODO: Add in more ship types. Fighter, Corvette, Frigate, Capital.
-// Add in more Weapon Systems.
+// Add in more ship types. Fighter, Corvette, Frigate, Capital.
 // Refactor Shields. Add Bypass and Drain.
 // Add in Armour reduction. Add Pierce and Shred.
 // Add in Components. Shield Gen, Bridge, Engines, Battery, etc.
 
-// TODO: Add in AI behaviours
+// Add Weapon System targeting.
+// Weapons can be set to a couple of different modes that determine if they will be used during an action.
+// Primary: Fires on any target during an attack.
+// Anti-Fighter: Only attacks Fighter and Corvette units.
+// Anti-Capital: Only attacks Frigate and Capital units.
+// Point-Defense: Retaliates against attackers on their attack.
+// Secondary: Only attacks during a designated behaviour.
+
+// Add more Weapon types, and power/ammo systems.
+// Lasers       use low power,  do low damage,  high accuracy.
+// Turbolasers  use high power, do high damage, low accuracy.
+// Missiles     use ammo,       medium damage,  high accuracy.
+// Bombs        use ammo,       high damage,    low accuracy.
+// Power weapons will need to cool down after shots.
+// Ammo weapons can be expended and will need to be restocked.
+
+// Add in AI behaviours
 // Add in Bombing Run behaviour. Could be general attack.
 // Add in Aggressive Attack / No Survivors. Allows killing Disabled.
 // Add in Covering Fire behaviour. Adds counter-attack for another Section.
 // Add in Evasive Manouvre. Makes Section harder to hit til their next turn.
 // Add in Flee. Section attempts to leave the battle.
 
-// TODO: Add in carrier functionality.
+// Add in behaviour functions for fleeing and panic.
+// Add a morale function to check if unit should change behaviour.
+// Add in Disabled function for when ship hull gets low enough.
+// Move Disabled ships into Disabled array.
+// Disabled array is targetable for Aggressive Attack.
+
+// Add in carrier functionality.
 // Carriers must launch Sections. Are added into Sections array from Carrier Unit.
 // Damaged sections can dock with carrier to repair hp and shields. Are removed from Sections array and placed back in Carrier Unit.
 // Sections are Destroyed or Disabled if Hangar is destroyed, or Carrier is disabled.
 // Sections are Destroyed if Carrier is Destroyed.
 
-// TODO: Consider adding distance functionality. Ships must move to engage.
+// Consider adding distance functionality. Ships must move to engage.
 
-// Templates
-function Group (name, sections, team) {
+// Manual turn buttons.
+
+// List all details of all Units, Weapons, Components to external file.
+// Allow easy construction of units from said file.
+// Export behaviour functions to external file. Clears up space.
+
+
+// Constructors
+
+function Group (name, team, sections) {
     this.name = name;
-    this.sections = sections;
     this.team = team;
+    this.sections = sections;
     this.state = 'active'
 }
-function Section (name, units, speed) {
+function Section (name, units) {
     this.name = name;
     this.units = units;
-    this.speed = speed;
+    this.speed = 0;
     this.casualties = [];
     this.state = 'active'
 }
-function Unit (name, unitName, wSystems, hp, sp, armor, evasion) {
+function Unit (name, unitName, hp, sp, armor, evasion, wSystems) {
     this.name = name;
     this.unitName = unitName;
-    this.wSystems = wSystems;
     this.hp = hp;
     this.sp = sp;
     this.hpMax = hp;
     this.spMax = sp;
     this.armor = armor;
     this.evasion = evasion;
+    this.wSystems = wSystems;
     this.kills = 0;
     this.totalDamageDealt = 0;
     this.state = 'active'
@@ -74,6 +92,49 @@ function Weapon (name, damage) {
     this.damage = damage;
     this.state = 'active'
 }
+
+/**
+ * Allows calling of a constuctor function using an array of arguements.
+ * @param {*} constructor   the constructor we are calling
+ * @param {*} args          the arguements for the constructor
+ * @param {*} additions     any additions, such as name, to unshift to the start
+ */
+function construct(constructor, args, additions) {
+    if (additions) args = additions.concat(args);
+    function F() {
+        return constructor.apply(this, args);
+    }
+    F.prototype = constructor.prototype;
+    return new F();
+}
+
+// Models
+
+const KX9LaserCannon = [
+    "KX9 Laser Cannon",
+    5
+]
+
+const KX9LaserArray = [
+    "KX-9 Laser Array",
+    [
+        construct(Weapon, KX9LaserCannon),
+        construct(Weapon, KX9LaserCannon),
+        construct(Weapon, KX9LaserCannon),
+        construct(Weapon, KX9LaserCannon)
+    ]
+]
+
+const XWing = [
+    "T65 X-Wing",
+    10,
+    10,
+    1,
+    50,
+    [
+        construct(WeaponSystem, KX9LaserArray)
+    ]
+];
 
 
 // Logging
@@ -416,302 +477,90 @@ const passTurn = function (groupArray) {
 
 // Setup
 
-let RedForce = new Group(
-    "Red Force",
-    [
-        new Section(
-            "Red Raiders",
-            [
-                new Unit("Red Alpha", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array",
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-                new Unit("Red Beta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array",
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-                new Unit("Red Gamma", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array",
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random() * 3)
-        ),
-        new Section(
-            "Red Roaders",
-            [
-                new Unit("Red Delta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array",
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-                new Unit("Red Epsilon", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array",
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-                new Unit("Red Zeta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array",
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random() * 3)
-        )
-    ], 1
-)
+// Assembly function:
+// Accepts Type of Constuctor, Args for Constructor, and Additions (which are added to args).
+// To assemble unit, pass (Unit, UnitStats, ["name"])
+// To assemble section, pass (Section, [[Units]], ["name"])
+// To assemble group, pass (Group, [[Sections]], ["name", team])
 
-let BlueForce = new Group(
-    "Blue Force",
-    [
-        new Section(
-            "Blue Band",
-            [
-                new Unit("Blue Alpha", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Blue Beta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Blue Gamma", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random()*3)
-        ),
-        new Section(
-            "Blue Brigade",
-            [
-                new Unit("Blue Delta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Blue Epsilon", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Blue Zeta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random()*3)
-        )
-    ], 1
-)
+// let RedAlpha = construct(Unit, XWing, ["Red Alpha"]);
+// let RedBeta = construct(Unit, XWing, ["Red Beta"]);
+// let RedGamma = construct(Unit, XWing, ["Red Gamma"]);
 
-let GreenForce = new Group(
-    "Green Force",
-    [
-        new Section(
-            "Green Garrison",
-            [
-                new Unit("Green Alpha", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Green Beta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Green Gamma", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random()*3)
-        ),
-        new Section(
-            "Green Guass",
-            [
-                new Unit("Green Delta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Green Epsilon", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Green Zeta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random()*3)
-        )
-    ], 2
-)
+// let RedDelta = construct(Unit, XWing, ["Red Delta"]);
+// let RedEpsilon = construct(Unit, XWing, ["Red Epsilon"]);
+// let RedZeta = construct(Unit, XWing, ["Red Zeta"]);
 
-let YellowForce = new Group(
-    "Yellow Force",
-    [
-        new Section(
-            "Yellow Yattas",
-            [
-                new Unit("Yellow Alpha", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Yellow Beta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Yellow Gamma", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                        [
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                            new Weapon("KX9 Laser Cannon", 5),
-                        ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random()*3)
-        ),
-        new Section(
-            "Yellow Yard",
-            [
-                new Unit("Yellow Delta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Yellow Epsilon", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-                new Unit("Yellow Zeta", "T65 X-Wing", [
-                    new WeaponSystem("KX-9 Laser Array", 
-                    [
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                        new Weapon("KX9 Laser Cannon", 5),
-                    ])
-                ], 10, 10, 1, 50),
-            ],
-            Math.floor(Math.random()*3)
-        )
-    ], 2
-)
+// let RedRaiders = construct(Section, [[RedAlpha, RedBeta, RedGamma]], ["Red Raiders"]);
+// let RedRoaders = construct(Section, [[RedDelta, RedEpsilon, RedZeta]], ["Red Roaders"]);
+
+// let RedForce = construct(Group, [[RedRaiders, RedRoaders]], ["Red Force", 1]);
+
+// let RedAlpha = construct(Unit, XWing, ["Red Alpha"]);
+// let RedBeta = construct(Unit, XWing, ["Red Beta"]);
+// let RedGamma = construct(Unit, XWing, ["Red Gamma"]);
+
+// let RedDelta = construct(Unit, XWing, ["Red Delta"]);
+// let RedEpsilon = construct(Unit, XWing, ["Red Epsilon"]);
+// let RedZeta = construct(Unit, XWing, ["Red Zeta"]);
+
+// let RedRaiders = construct(Section, [[RedAlpha, RedBeta, RedGamma]], ["Red Raiders"]);
+// let RedRoaders = construct(Section, [[RedDelta, RedEpsilon, RedZeta]], ["Red Roaders"]);
+
+let RedForce = construct(
+    Group,
+    [[
+        construct(
+            Section,
+            [[
+                construct(Unit, XWing, ["Red Alpha"]),
+                construct(Unit, XWing, ["Red Beta"]),
+                construct(Unit, XWing, ["Red Gamma"])
+            ]],
+            ["Red Raiders"]),
+        construct(
+            Section,
+            [[
+                construct(Unit, XWing, ["Red Delta"]),
+                construct(Unit, XWing, ["Red Epsilon"]),
+                construct(Unit, XWing, ["Red Zeta"])
+            ]],
+            ["Red Roaders"])
+    ]],
+    ["Red Force", 1]);
+
+let BlueForce = construct(
+    Group,
+    [[
+        construct(
+            Section,
+            [[
+                construct(Unit, XWing, ["Blue Alpha"]),
+                construct(Unit, XWing, ["Blue Beta"]),
+                construct(Unit, XWing, ["Blue Gamma"])
+            ]],
+            ["Blue Band"]),
+        construct(
+            Section,
+            [[
+                construct(Unit, XWing, ["Blue Delta"]),
+                construct(Unit, XWing, ["Blue Epsilon"]),
+                construct(Unit, XWing, ["Blue Zeta"])
+            ]],
+            ["Blue Bombers"])
+    ]],
+    ["Blue Force", 2]);
 
 // Execution
+
+console.log(RedForce);
 
 // Battle Loop
 let combatants = new Array;
 combatants.push(RedForce);
 combatants.push(BlueForce);
-combatants.push(GreenForce);
-combatants.push(YellowForce);
+// combatants.push(GreenForce);
+// combatants.push(YellowForce);
 
 printString("Combat Start");
 printString("=====");
