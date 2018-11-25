@@ -55,21 +55,24 @@
 
 // Constructors
 
-function Group (name, team, sections) {
-    this.name = name;
-    this.team = team;
+function Group (sections, name, team) {
     this.sections = sections;
     this.state = 'active'
-}
-function Section (name, units) {
+
+    // construct args
     this.name = name;
+    this.team = team;
+}
+function Section (units, name) {
     this.units = units;
     this.speed = 0;
     this.casualties = [];
     this.state = 'active'
-}
-function Unit (name, unitName, type, hp, sp, armor, evasion, wSystems) {
+
+    // construct args
     this.name = name;
+}
+function Unit (unitName, type, hp, sp, armor, evasion, wSystems, name) {
     this.unitName = unitName;
     this.type = type;
     this.hp = hp;
@@ -82,16 +85,23 @@ function Unit (name, unitName, type, hp, sp, armor, evasion, wSystems) {
     this.kills = 0;
     this.totalDamageDealt = 0;
     this.state = 'active'
+
+    // construct args
+    this.name = name;
 }
-function WeaponSystem (name, weapons) {
+function WeaponSystem (name, weapons, setting) {
     this.name = name;
     this.weapons = weapons;
     this.state = 'active'
+
+    // construct args
+    this.setting = setting;
 }
-function Weapon (name, minDamage, maxDamage, accuracy) {
+function Weapon (name, minDamage, maxDamage, damageType, accuracy, setting) {
     this.name = name;
     this.minDamage = minDamage;
     this.maxDamage = maxDamage;
+    this.damageType = damageType;
     this.accuracy = accuracy;
     this.state = 'active'
 }
@@ -103,7 +113,9 @@ function Weapon (name, minDamage, maxDamage, accuracy) {
  * @param {*} additions     any additions, such as name, to unshift to the start
  */
 function construct(constructor, args, additions) {
-    if (additions) args = additions.concat(args);
+    if (additions) {
+        args = args.concat(additions);
+    }
     function F() {
         return constructor.apply(this, args);
     }
@@ -118,24 +130,28 @@ const KX9LaserCannon = [
     "KX9 Laser Cannon",
     1,
     5,
+    "energy",
     25
 ]
 const H9Turbolaser = [
     "H9 Turbolaser",
     5,
     10,
+    "energy",
     5
 ]
 const XX9HeavyTurbolaser = [
     "XX9 Heavy Turbolaser",
     20,
     30,
+    "energy",
     5
 ]
 const NK7IonCannon = [
     "NK-7 Ion Cannon",
-    15,
-    30,
+    10,
+    20,
+    "ion",
     10
 ]
 
@@ -298,9 +314,9 @@ const XWing = [
     10,
     10,
     1,
-    50,
+    65,
     [
-        construct(WeaponSystem, KX9LaserArray)
+        construct(WeaponSystem, KX9LaserArray, ["primary"])
     ]
 ];
 
@@ -310,47 +326,53 @@ const CorellianCorvette = [
     30,
     20,
     3,
-    30,
+    45,
     [
-        construct(WeaponSystem, H9DualTurbolaserTurret),
-        construct(WeaponSystem, H9DualTurbolaserTurret),
-        construct(WeaponSystem, H9TurbolaserTurret),
-        construct(WeaponSystem, H9TurbolaserTurret),
-        construct(WeaponSystem, H9TurbolaserTurret),
-        construct(WeaponSystem, H9TurbolaserTurret)
+        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"])
     ]
 ];
 
 const Imperial1 = [
     "Imperial I-class Star Destroyer",
     "Capital",
-    5000,
+    1000,
     5000,
     5,
     5,
     [
-        construct(WeaponSystem, XX9HeavyTurbolaserx20),
-        construct(WeaponSystem, XX9HeavyTurbolaserx20),
-        construct(WeaponSystem, XX9HeavyTurbolaserx20),
-        construct(WeaponSystem, NK7IonCannonx20),
-        construct(WeaponSystem, NK7IonCannonx15),
-        construct(WeaponSystem, NK7IonCannonx15),
-        construct(WeaponSystem, NK7IonCannonx10),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
-        construct(WeaponSystem, NK7DualHeavyIonCannonTurret),
-        construct(WeaponSystem, NK7DualHeavyIonCannonTurret),
-        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["primary"]),
+        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["secondary"]),
+        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["pointDefense"]),
+
+        construct(WeaponSystem, NK7IonCannonx20, ["primary"]),
+        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
+        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
+        construct(WeaponSystem, NK7IonCannonx10, ["pointDefense"]),
+
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
+
+        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
+        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
+
+        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
+
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
+
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
     ]
 ];
 
@@ -390,6 +412,9 @@ const constructString = function (log) {
 
     // Tabulate all damage against a single target's shields.
     if (log.spDam > 0) logString += " " + log.atk.name + " dealt " + log.spDam + " shield damage. ";
+
+    // Display extra damage from ion hitting shields.
+    if (log.ionDam > 0) logString += " " + log.ionDam + " extra damage from ion weapons. ";
 
     // If they lost shields.
     if (log.sBreak === true) logString += " " + log.def.name + " has lost shields! ";
@@ -514,16 +539,35 @@ const checkTeams = function (combatants) {
     return remainingTeams;
 }
 
+// ATTACK FUNCTIONS
+
+// Attack log object constructor
+function LogTurnObject (atk, def, system) {
+    this.atk = atk;
+    this.def = def;
+    this.system = system;
+    
+    this.hits = 0;
+    this.hpDam = 0;
+    this.spDam = 0;
+    this.ionDam = 0;
+    this.soaks = 0;
+    this.kill = false;
+    this.sBreak = false;
+}
+
 /**
  * Calculates damage for an attack. Assigns to either shields or hull, and reduces by armour.
  */
 const damageCalc = function (logObjTurn, weapon, atk, def) {
     let damage = damageRoll(weapon.maxDamage, weapon.minDamage);
 
-    console.log(atk.name + " dealt " + damage);
-
     // If target has shields, resolve shield damage. Otherwise, resolve hull damage.
     if (def.sp > 0) {
+        if (weapon.damageType === "ion") {
+            damage *= 1.5;
+            logObjTurn.ionDam = (damage * 1.5) - damage;
+        }
         let newSp = def.sp - damage;
         
         // If we reduced sp to or below zero, the shield has been lost.
@@ -578,71 +622,105 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
     }
 };
 
-/**
- * Behaviour for General Unit attack.
- */
-const behaviourAttack = function (logArray, atk, targetSection) {
+const rollAttack = function (logObjTurn, weapon, atk, def, defSection) {
+    // If the unit has not been destroyed.
+    if (def.state === "active") {
+        const roll = percentileRoll() + weapon.accuracy;
 
-    // Redo Logs
-    // Each Unit makes a behaviour. In an attack, each weapon system picks a target, and each weapon fires.
-    // To start, log each attack: Miss, Hit, Soak, Damage, Kill.
+        // If attack hits, calculate damage.
+        if (roll >= def.evasion) {
+            // Log Data
+            logObjTurn.hits += 1;
 
-    // Sample Log
-    // Alpha takes a turn.
-    // Alpha fires with GunSys at Beta. It hits 2 times! Deals 5 Shield Damage. Beta has lost shields!
-    // Alpha fires with GunSys at Beta. It hits 0 times!
-    // Alpha fires with GunSys at Beta. It hits 1 times! Damage has been soaked by armor.
+            damageCalc(logObjTurn, weapon, atk, def);
 
+            // If unit was destroyed by the attack, remove it.
+            if (def.state === "destroyed") {
+                removeUnit(def, defSection.units, defSection.casualties);
+                // If that was the last unit of the section, destroy it.
+                if (defSection.units.length === 0) {
+                    defSection.state = "destroyed";
+                    console.log("All units in " + defSection.name + " destroyed.");
+                }
+            }
+        }
+    } else {
+        console.log(atk.name + " has destroyed this unit. Shot misses.");
+    }
+}
+
+const hasPointDefense = function (section) {
+    section.units.forEach(function(unit) {
+        unit.wSystems.forEach(function(system){
+            if (system.setting === "pointDefense") {
+                return true;
+            }
+        });
+    })
+    return false;
+}
+
+// Ship Behaviours
+
+// CloseAttack: Unit attacks at close range using Primary weapons. PD retaliation.
+const behaviourCloseAttack = function (logArray, atk, targetSection) {
+
+}
+// LongAttack: Unit attacks at long range using Primary weapons. No PD.
+const behaviourLongAttack = function (logArray, atk, targetSection) {
+
+}
+// Flee: Unit attempts to leave combat. Does not attack.
+const behaviourFlee = function (logArray, unit) {
+
+}
+
+// PD: Unit fires PD weapons before they are attacked.
+const behaviourPD = function (logArray, atk, targetSection) {
+
+    // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
-        
-        if (targetSection.units.length > 0) {
-            let def = selectTarget(targetSection.units);
-            let evasion = def.evasion;
 
-            let logObjTurn = new Object;
-            logObjTurn.atk = atk;
-            logObjTurn.def = def;
-            logObjTurn.system = system;
-            logObjTurn.hits = 0;
-            logObjTurn.hpDam = 0;
-            logObjTurn.spDam = 0;
-            logObjTurn.soaks = 0;
-            logObjTurn.kill = false;
-            logObjTurn.sBreak = false;
+        if (system.setting === "pointDefense" && targetSection.units.length > 0) {
+            let def = selectTarget(targetSection.units);
+            let logObjTurn = new LogTurnObject(atk, def, system);
 
             // For each weapon, roll an attack and resolve the damage
             // If we destroy the unit, remove it from targets and into casualties.
             // If target is not active, all shots miss.
             system.weapons.forEach(function(weapon) {
-                // If the unit has not been destroyed.
-                if (def.state === "active") {
-                    const roll = percentileRoll() + weapon.accuracy;
-
-                    // If attack hits, calculate damage.
-                    if (roll >= evasion) {
-
-                        // Log Data
-                        logObjTurn.hits += 1;
-
-                        damageCalc(logObjTurn, weapon, atk, def);
-
-                        // If unit was destroyed by the attack, remove it.
-                        if (def.state === "destroyed") {
-                            removeUnit(def, targetSection.units, targetSection.casualties);
-                            // If that was the last unit of the section, destroy it.
-                            if (targetSection.units.length === 0) {
-                                targetSection.state = "destroyed";
-                                console.log("All units in " + targetSection.name + " destroyed.");
-                            }
-                        }
-                    }
-                } else {
-                    console.log(atk.name + " has destroyed this unit. Shot misses.");
-                }
+                rollAttack(logObjTurn, weapon, atk, def, targetSection);
             })
 
-            // Log result of behaviour
+            // Log result of attack
             logArray.push(constructString(logObjTurn));
+        
+        }
+    })
+}
+
+/**
+ * Behaviour for General Unit attack.
+ */
+const behaviourAttack = function (logArray, atk, targetSection) {
+
+    // Systems grab valid targets.
+    atk.wSystems.forEach(function(system) {
+
+        if (system.setting === "primary" && targetSection.units.length > 0) {
+            let def = selectTarget(targetSection.units);
+            let logObjTurn = new LogTurnObject(atk, def, system);
+
+            // For each weapon, roll an attack and resolve the damage
+            // If we destroy the unit, remove it from targets and into casualties.
+            // If target is not active, all shots miss.
+            system.weapons.forEach(function(weapon) {
+                rollAttack(logObjTurn, weapon, atk, def, targetSection);
+            })
+
+            // Log result of attack
+            logArray.push(constructString(logObjTurn));
+        
         }
     })
 };
@@ -676,7 +754,7 @@ const passTurn = function (groupArray) {
 
                 // Check that there are valid sections to target.
                 if (targetSectionsArray.length > 0) {
-                    logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
+                    printString(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
 
                     // Select a random section. All units of active section will attack the units within.
                     let targetedSection = selectTarget(targetSectionsArray);
@@ -686,6 +764,25 @@ const passTurn = function (groupArray) {
                     logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " units within.");
                     logArray.push("----------");
 
+                    // Determine PD
+                    let pdCheck = true;
+                    if (!!pdCheck) {
+                        logArray.push(targetedSection.name + " initiates point defense.");
+                        targetedSection.units.forEach(function(unit) {
+
+                            // Check that there are any possible units left to target in the section.
+                            if (activeSection.units.length > 0) {
+                                behaviourPD(logArray, unit, targetedSection);
+                            } else {
+                                console.log(unit.name + " cannot find any units left in the enemy section.")
+                            }
+    
+                            // Check if any group has been completely destroyed
+                            checkGroups(groupArray);
+                        })
+                    }
+
+                    logArray.push(activeSection.name + " initiates general attack.");
                     activeSection.units.forEach(function(unit) {
 
                         // TODO: Alter behaviour based on Morale here.
@@ -693,7 +790,7 @@ const passTurn = function (groupArray) {
 
                         // Check that there are any possible units left to target in the section.
                         if (targetedSection.units.length > 0) {
-                            behaviourAttack(logArray, unit, targetedSection);
+                            behaviourAttack(logArray, unit, activeSection, targetedSection);
                         } else {
                             console.log(unit.name + " cannot find any units left in the enemy section.")
                         }
@@ -769,55 +866,57 @@ const passTurn = function (groupArray) {
 // )
 
 let RedForce = new Group(
-    "Red Force",
-    1,
     [
         new Section(
-            "Red Rack",
             [
                 construct(Unit, Imperial1, ["Red Empire"])
-            ]
+            ],
+            "Red Rack"
         ),
-    ]
+    ],
+    "Red Force",
+    1
 )
 
 let BlueForce = new Group(
-    "Blue Force",
-    2,
     [
         new Section(
-            "Blue Ball",
             [
                 construct(Unit, Imperial1, ["Blue Empire"])
-            ]
+            ],
+            "Blue Ball"
         ),
-    ]
+    ],
+    "Blue Force",
+    2
 )
 
 let GreenForce = new Group(
-    "Green Force",
-    2,
     [
         new Section(
-            "Green Gunners",
             [
                 construct(Unit, XWing, ["Green Alpha"]),
                 construct(Unit, XWing, ["Green Beta"]),
                 construct(Unit, XWing, ["Green Gamma"]),
-            ]
+            ],
+            "Green Gunners"
         ),
         new Section(
-            "Green Garrison",
             [
                 construct(Unit, XWing, ["Green Delta"]),
                 construct(Unit, XWing, ["Green Epsilon"]),
                 construct(Unit, XWing, ["Green Zeta"]),
-            ]
+            ],
+            "Green Garrison"
         ),
-    ]
+    ],
+    "Green Force",
+    2
 )
 
 // Execution
+
+console.log(GreenForce)
 
 // Battle Loop
 let combatants = new Array;
