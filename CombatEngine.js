@@ -68,9 +68,10 @@ function Section (name, units) {
     this.casualties = [];
     this.state = 'active'
 }
-function Unit (name, unitName, hp, sp, armor, evasion, wSystems) {
+function Unit (name, unitName, type, hp, sp, armor, evasion, wSystems) {
     this.name = name;
     this.unitName = unitName;
+    this.type = type;
     this.hp = hp;
     this.sp = sp;
     this.hpMax = hp;
@@ -293,6 +294,7 @@ const NK7IonCannonx10 = [
 
 const XWing = [
     "T65 X-Wing",
+    "Fighter",
     10,
     10,
     1,
@@ -304,6 +306,7 @@ const XWing = [
 
 const CorellianCorvette = [
     "CR90 Corvette",
+    "Corvette",
     30,
     20,
     3,
@@ -320,6 +323,7 @@ const CorellianCorvette = [
 
 const Imperial1 = [
     "Imperial I-class Star Destroyer",
+    "Capital",
     5000,
     5000,
     5,
