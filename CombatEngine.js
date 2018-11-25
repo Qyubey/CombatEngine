@@ -72,7 +72,7 @@ function Section (units, name) {
     // construct args
     this.name = name;
 }
-function Unit (unitName, type, hp, sp, armor, evasion, wSystems, name) {
+function Unit (unitName, type, hp, sp, armor, speed, evasion, wSystems, name) {
     this.unitName = unitName;
     this.type = type;
     this.hp = hp;
@@ -80,6 +80,7 @@ function Unit (unitName, type, hp, sp, armor, evasion, wSystems, name) {
     this.hpMax = hp;
     this.spMax = sp;
     this.armor = armor;
+    this.speed = speed;
     this.evasion = evasion;
     this.wSystems = wSystems;
     this.kills = 0;
@@ -138,21 +139,21 @@ const H9Turbolaser = [
     5,
     10,
     "energy",
-    5
+    -10
 ]
 const XX9HeavyTurbolaser = [
     "XX9 Heavy Turbolaser",
     20,
     30,
     "energy",
-    5
+    -25
 ]
 const NK7IonCannon = [
     "NK-7 Ion Cannon",
     10,
     20,
     "ion",
-    10
+    -20
 ]
 
 // Weapon Systems
@@ -211,7 +212,7 @@ const XX9HeavyTurbolaserTurret = [
 ]
 
 const XX9HeavyTurbolaserx20 = [
-    "XX9 Heavy Turbolaser Grid (20)",
+    "XX9 Heavy Turbolaser Grid",
     [
         construct(Weapon, XX9HeavyTurbolaser),
         construct(Weapon, XX9HeavyTurbolaser),
@@ -246,7 +247,7 @@ const NK7DualHeavyIonCannonTurret = [
 ]
 
 const NK7IonCannonx20 = [
-    "NK-7 Ion Cannon Grid (20)",
+    "NK-7 Ion Cannon Grid",
     [
         construct(Weapon, NK7IonCannon),
         construct(Weapon, NK7IonCannon),
@@ -272,7 +273,7 @@ const NK7IonCannonx20 = [
     ]
 ]
 const NK7IonCannonx15 = [
-    "NK-7 Ion Cannon Grid (15)",
+    "NK-7 Ion Cannon Grid",
     [
         construct(Weapon, NK7IonCannon),
         construct(Weapon, NK7IonCannon),
@@ -293,7 +294,7 @@ const NK7IonCannonx15 = [
     ]
 ]
 const NK7IonCannonx10 = [
-    "NK-7 Ion Cannon Grid (10)",
+    "NK-7 Ion Cannon Grid",
     [
         construct(Weapon, NK7IonCannon),
         construct(Weapon, NK7IonCannon),
@@ -314,18 +315,20 @@ const XWing = [
     10,
     10,
     1,
+    2,
     65,
     [
         construct(WeaponSystem, KX9LaserArray, ["primary"])
     ]
 ];
 
-const CorellianCorvette = [
-    "CR90 Corvette",
+const CR90Corvette = [
+    "CR90 'Corellian' Corvette",
     "Corvette",
     30,
     20,
     3,
+    5,
     45,
     [
         construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
@@ -341,8 +344,9 @@ const Imperial1 = [
     "Imperial I-class Star Destroyer",
     "Capital",
     1000,
-    5000,
+    1000,
     5,
+    10,
     5,
     [
         construct(WeaponSystem, XX9HeavyTurbolaserx20, ["primary"]),
@@ -396,11 +400,12 @@ const printArray = function (logArray) {
 
 const constructString = function (log) {
     let logString = "";
+    const systemName = log.system.name + " (" + log.system.weapons.length + ")"
 
     if (!log.def) return "DEBUG: All defenders killed. Invalid target.";
 
     // Log initial activity.
-    logString += log.atk.name + " fires at " + log.def.name + " using " + log.system.name + "."
+    logString += log.atk.name + " fires at " + log.def.name + " using " + systemName + "."
 
     // How many hits
     if (log.hits > 1) logString += " It hit " + log.hits + " times!";
@@ -456,7 +461,7 @@ const displayCombatants = function (groups) {
 }
 
 
-// Functions
+// General Functions
 
 /**
  * Returns a random number from 1 to 100.
@@ -494,6 +499,9 @@ const selectTarget = function (array) {
     return validTargets[Math.floor(Math.random()*validTargets.length)];
 };
 
+/**
+ * Check if the group is still active, or all sections have been destroyed.
+ */
 const checkGroups = function (allGroups) {
     allGroups.forEach(function (group) {
         if (group.state === "active") {
@@ -539,9 +547,9 @@ const checkTeams = function (combatants) {
     return remainingTeams;
 }
 
-// ATTACK FUNCTIONS
+// Attack functions
 
-// Attack log object constructor
+// Turn Log Constructor
 function LogTurnObject (atk, def, system) {
     this.atk = atk;
     this.def = def;
@@ -622,6 +630,9 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
     }
 };
 
+/**
+ * Rolls an attack against a defender. If defender dies, they are removed from their section.
+ */
 const rollAttack = function (logObjTurn, weapon, atk, def, defSection) {
     // If the unit has not been destroyed.
     if (def.state === "active") {
@@ -647,17 +658,6 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection) {
     } else {
         console.log(atk.name + " has destroyed this unit. Shot misses.");
     }
-}
-
-const hasPointDefense = function (section) {
-    section.units.forEach(function(unit) {
-        unit.wSystems.forEach(function(system){
-            if (system.setting === "pointDefense") {
-                return true;
-            }
-        });
-    })
-    return false;
 }
 
 // Ship Behaviours
@@ -725,6 +725,24 @@ const behaviourAttack = function (logArray, atk, targetSection) {
     })
 };
 
+
+// Turn Functions
+
+/**
+ * Checks if the section has any units with PD weapon systems.
+ */
+const hasPointDefense = function (section) {
+    let pdFound = false;
+    section.units.forEach(function(unit) {
+        unit.wSystems.forEach(function(system){
+            if (system.setting === "pointDefense") {
+                pdFound = true;
+            }
+        });
+    }) 
+    return pdFound;
+}
+
 /**
  * Handles turn calculations.
  */
@@ -754,32 +772,34 @@ const passTurn = function (groupArray) {
 
                 // Check that there are valid sections to target.
                 if (targetSectionsArray.length > 0) {
-                    printString(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
+                    logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
 
                     // Select a random section. All units of active section will attack the units within.
                     let targetedSection = selectTarget(targetSectionsArray);
 
                     // TODO: Determine Behaviour of Section here.
+                    let behaviour = behaviourAttack;
                     
                     logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " units within.");
                     logArray.push("----------");
 
-                    // Determine PD
-                    let pdCheck = true;
-                    if (!!pdCheck) {
-                        logArray.push(targetedSection.name + " initiates point defense.");
-                        targetedSection.units.forEach(function(unit) {
+                    // Check if behavior engenders Point Defense
+                    if (behaviour === behaviourAttack) {
+                        if (hasPointDefense(targetedSection)) {
+                            logArray.push(targetedSection.name + " initiates point defense.");
+                            targetedSection.units.forEach(function(unit) {
 
-                            // Check that there are any possible units left to target in the section.
-                            if (activeSection.units.length > 0) {
-                                behaviourPD(logArray, unit, targetedSection);
-                            } else {
-                                console.log(unit.name + " cannot find any units left in the enemy section.")
-                            }
-    
-                            // Check if any group has been completely destroyed
-                            checkGroups(groupArray);
-                        })
+                                // Check that there are any possible units left to target in the section.
+                                if (activeSection.units.length > 0) {
+                                    behaviourPD(logArray, unit, activeSection);
+                                } else {
+                                    console.log(unit.name + " cannot find any units left in the enemy section.")
+                                }
+        
+                                // Check if any group has been completely destroyed
+                                checkGroups(groupArray);
+                            })
+                        }
                     }
 
                     logArray.push(activeSection.name + " initiates general attack.");
@@ -790,7 +810,7 @@ const passTurn = function (groupArray) {
 
                         // Check that there are any possible units left to target in the section.
                         if (targetedSection.units.length > 0) {
-                            behaviourAttack(logArray, unit, activeSection, targetedSection);
+                            behaviour(logArray, unit, targetedSection);
                         } else {
                             console.log(unit.name + " cannot find any units left in the enemy section.")
                         }
@@ -802,7 +822,7 @@ const passTurn = function (groupArray) {
                 }
 
                 // Reset speed/turn timer.
-                activeSection.speed = Math.floor(Math.random()*3);
+                setSpeed(activeSection);
             } else { // If not your turn, tick speed.
                 if (activeSection.state === "active") activeSection.speed -= 1;
             }
@@ -817,61 +837,21 @@ const passTurn = function (groupArray) {
 
 // Setup
 
-// Can Either Use
-// let RedForce = construct(
-//     Group,
-//     [[
-//         construct(
-//             Section,
-//             [[
-//                 construct(Unit, XWing, ["Red Alpha"]),
-//                 construct(Unit, XWing, ["Red Beta"]),
-//                 construct(Unit, XWing, ["Red Gamma"])
-//             ]],
-//             ["Red Raiders"]),
-//         construct(
-//             Section,
-//             [[
-//                 construct(Unit, XWing, ["Red Delta"]),
-//                 construct(Unit, XWing, ["Red Epsilon"]),
-//                 construct(Unit, XWing, ["Red Zeta"])
-//             ]],
-//             ["Red Roaders"])
-//     ]],
-//     ["Red Force", 1]);
-//
-// OR
-//
-// let RedForce = new Group(
-//     "Red Force",
-//     1,
-//     [
-//         new Section(
-//             "Red Raiders",
-//             [
-//                 construct(Unit, XWing, ["Red Alpha"]),
-//                 construct(Unit, XWing, ["Red Beta"]),
-//                 construct(Unit, XWing, ["Red Gamma"]),
-//             ]
-//         ),
-//         new Section(
-//             "Red Roaders",
-//             [
-//                 construct(Unit, XWing, ["Red Alpha"]),
-//                 construct(Unit, XWing, ["Red Beta"]),
-//                 construct(Unit, XWing, ["Red Gamma"]),
-//             ]
-//         ),
-//     ]
-// )
-
 let RedForce = new Group(
     [
         new Section(
             [
-                construct(Unit, Imperial1, ["Red Empire"])
+                // construct(Unit, Imperial1, ["Imperial-1"]),
+                construct(Unit, XWing, ["Red Alpha"]),
+                construct(Unit, XWing, ["Red Beta"]),
+                construct(Unit, XWing, ["Red Gamma"]),
+                construct(Unit, XWing, ["Red Delta"]),
+                construct(Unit, XWing, ["Red Epsilon"]),
+                construct(Unit, XWing, ["Red Zeta"]),
+                construct(Unit, CR90Corvette, ["Blockrunner"]),
+                construct(Unit, CR90Corvette, ["Hammerhead"]),
             ],
-            "Red Rack"
+            "Red Raiders"
         ),
     ],
     "Red Force",
@@ -882,7 +862,7 @@ let BlueForce = new Group(
     [
         new Section(
             [
-                construct(Unit, Imperial1, ["Blue Empire"])
+                construct(Unit, Imperial1, ["Imperial-1"])
             ],
             "Blue Ball"
         ),
@@ -918,12 +898,30 @@ let GreenForce = new Group(
 
 console.log(GreenForce)
 
+/**
+ * Find the highest speed of units within the section
+ */
+const setSpeed = function (section) {
+    let highestSpeed = 0;
+    section.units.forEach(function(unit) {
+        if (unit.speed > highestSpeed) highestSpeed = unit.speed;
+    })
+    // section.speed = Math.floor(Math.random()*highestSpeed);
+    section.speed = highestSpeed;
+}
+
 // Battle Loop
 let combatants = new Array;
 combatants.push(RedForce);
 combatants.push(BlueForce);
 // combatants.push(GreenForce);
 // combatants.push(YellowForce);
+
+combatants.forEach(function(combatant) {
+    combatant.sections.forEach(function(section) {
+        setSpeed(section);
+    })
+});
 
 printString("Combat Start");
 printString("=====");
@@ -940,7 +938,7 @@ for (let i = 0; i < 100; i++) {
         displayCombatants(combatants);
         i = 100;
     } else {
-        if (i !== 0 && i % 5 === 0) displayCombatants(combatants);
+        if (i > 0 && i % 10 === 0) displayCombatants(combatants);
         passTurn(combatants);
     }
 
