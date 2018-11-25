@@ -66,13 +66,14 @@ function Group (sections, name, team) {
 function Section (units, name) {
     this.units = units;
     this.speed = 0;
-    this.casualties = [];
+    this.casualties = new Array;
+    this.escapees = new Array;
     this.state = 'active';
 
     // construct args
     this.name = name;
 }
-function Unit (unitName, type, hp, sp, armor, speed, evasion, wSystems, name) {
+function Unit (unitName, type, hp, sp, armor, speed, evasion, wSystems, behaviours, name) {
     this.unitName = unitName;
     this.type = type;
     this.hp = hp;
@@ -83,6 +84,7 @@ function Unit (unitName, type, hp, sp, armor, speed, evasion, wSystems, name) {
     this.speed = speed;
     this.evasion = evasion;
     this.wSystems = wSystems;
+    this.behaviours = behaviours;
     this.kills = 0;
     this.totalDamageDealt = 0;
     this.state = 'active';
@@ -123,262 +125,6 @@ function construct(constructor, args, additions) {
     F.prototype = constructor.prototype;
     return new F();
 }
-
-// Models
-
-// Weapons
-const KX9LaserCannon = [
-    "KX9 Laser Cannon",
-    1,
-    5,
-    "energy",
-    25
-]
-const H9Turbolaser = [
-    "H9 Turbolaser",
-    5,
-    10,
-    "energy",
-    -10
-]
-const XX9HeavyTurbolaser = [
-    "XX9 Heavy Turbolaser",
-    20,
-    30,
-    "energy",
-    -25
-]
-const NK7IonCannon = [
-    "NK-7 Ion Cannon",
-    10,
-    20,
-    "ion",
-    -20
-]
-
-// Weapon Systems
-const KX9LaserArray = [
-    "KX-9 Laser Array",
-    [
-        construct(Weapon, KX9LaserCannon),
-        construct(Weapon, KX9LaserCannon),
-        construct(Weapon, KX9LaserCannon),
-        construct(Weapon, KX9LaserCannon)
-    ]
-]
-const H9TurbolaserTurret = [
-    "H9 Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser)
-    ]
-]
-const H9DualTurbolaserTurret = [
-    "H9 Dual Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
-    ]
-]
-
-const XX9QuadHeavyTurbolaserTurret = [
-    "XX9 Quad Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
-    ]
-]
-const XX9TripleHeavyTurbolaserTurret = [
-    "XX9 Triple Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
-    ]
-]
-const XX9DualHeavyTurbolaserTurret = [
-    "XX9 Dual Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
-    ]
-]
-const XX9HeavyTurbolaserTurret = [
-    "XX9 Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser)
-    ]
-]
-
-const XX9HeavyTurbolaserx20 = [
-    "XX9 Heavy Turbolaser Grid",
-    [
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-    ]
-]
-
-const NK7DualHeavyIonCannonTurret = [
-    "NK7 Dual Heavy Ion Cannon Turret",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon)
-    ]
-]
-
-const NK7IonCannonx20 = [
-    "NK-7 Ion Cannon Grid",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-    ]
-]
-const NK7IonCannonx15 = [
-    "NK-7 Ion Cannon Grid",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-    ]
-]
-const NK7IonCannonx10 = [
-    "NK-7 Ion Cannon Grid",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-    ]
-]
-
-const XWing = [
-    "T65 X-Wing",
-    "Fighter",
-    10,
-    10,
-    1,
-    2,
-    65,
-    [
-        construct(WeaponSystem, KX9LaserArray, ["primary"])
-    ]
-];
-
-const CR90Corvette = [
-    "CR90 'Corellian' Corvette",
-    "Corvette",
-    30,
-    20,
-    3,
-    5,
-    45,
-    [
-        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"])
-    ]
-];
-
-const Imperial1 = [
-    "Imperial I-class Star Destroyer",
-    "Capital",
-    1000,
-    1000,
-    5,
-    10,
-    5,
-    [
-        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["primary"]),
-        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["secondary"]),
-        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["pointDefense"]),
-
-        construct(WeaponSystem, NK7IonCannonx20, ["primary"]),
-        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
-        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
-        construct(WeaponSystem, NK7IonCannonx10, ["pointDefense"]),
-
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
-
-        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
-        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
-
-        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
-
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
-
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-    ]
-];
 
 
 // Logging
@@ -437,7 +183,7 @@ const constructString = function (log) {
 };
 
 /**
- * Displays a general log for an entire group.
+ * Displays a general status log for all groups.
  * @param {*} groups 
  */
 const displayCombatants = function (groups) {
@@ -660,28 +406,14 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection) {
     }
 }
 
-// Ship Behaviours
-
-// CloseAttack: Unit attacks at close range using Primary weapons. PD retaliation.
-const behaviourCloseAttack = function (logArray, atk, targetSection) {
-
-}
-// LongAttack: Unit attacks at long range using Primary weapons. No PD.
-const behaviourLongAttack = function (logArray, atk, targetSection) {
-
-}
-// Flee: Unit attempts to leave combat. Does not attack.
-const behaviourFlee = function (logArray, unit) {
-
-}
-
-// PD: Unit fires PD weapons before they are attacked.
-const behaviourPD = function (logArray, atk, targetSection) {
-
+/**
+ * Selects targets for each weapon system on the attacker.
+ */
+const selectSystemTargets = function (logArray, atk, targetSection, activeSetting) {
     // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
 
-        if (system.setting === "pointDefense" && targetSection.units.length > 0) {
+        if (system.setting === activeSetting && targetSection.units.length > 0) {
             let def = selectTarget(targetSection.units);
             let logObjTurn = new LogTurnObject(atk, def, system);
 
@@ -697,32 +429,48 @@ const behaviourPD = function (logArray, atk, targetSection) {
         
         }
     })
+}
+
+// Ship Behaviours
+
+// CloseAttack: Unit attacks at close range using Primary weapons. PD retaliation.
+const behaviourCloseAttack = function (logArray, atk, targetSection) {
+    logArray.push(atk.name + " initiates close attack.");
+    let activeSetting = "primary";
+
+    selectSystemTargets(logArray, atk, targetSection, activeSetting);
+
+}
+// LongAttack: Unit attacks at long range using Primary weapons. No PD.
+const behaviourLongAttack = function (logArray, atk, targetSection) {
+    logArray.push(atk.name + " initiates long attack.");
+    let activeSetting = "primary";
+
+    selectSystemTargets(logArray, atk, targetSection, activeSetting);
+
+}
+// Flee: Unit attempts to leave combat. Does not attack.
+const behaviourFlee = function (logArray, unit) {
+    logArray.push(atk.name + " attempts to flee.");
+
+}
+
+// PD: Unit fires PD weapons before they are attacked.
+const behaviourPD = function (logArray, atk, targetSection) {
+    logArray.push(atk.name + " initiates point defense.");
+    let activeSetting = "pointDefense";
+
+    selectSystemTargets(logArray, atk, targetSection, activeSetting);
 }
 
 /**
  * Behaviour for General Unit attack.
  */
 const behaviourAttack = function (logArray, atk, targetSection) {
+    logArray.push(atk.name + " initiates general attack.");
+    let activeSetting = "primary";
 
-    // Systems grab valid targets.
-    atk.wSystems.forEach(function(system) {
-
-        if (system.setting === "primary" && targetSection.units.length > 0) {
-            let def = selectTarget(targetSection.units);
-            let logObjTurn = new LogTurnObject(atk, def, system);
-
-            // For each weapon, roll an attack and resolve the damage
-            // If we destroy the unit, remove it from targets and into casualties.
-            // If target is not active, all shots miss.
-            system.weapons.forEach(function(weapon) {
-                rollAttack(logObjTurn, weapon, atk, def, targetSection);
-            })
-
-            // Log result of attack
-            logArray.push(constructString(logObjTurn));
-        
-        }
-    })
+    selectSystemTargets(logArray, atk, targetSection, activeSetting);
 };
 
 
@@ -757,7 +505,7 @@ const passTurn = function (groupArray) {
         activeGroup.sections.forEach(function(activeSection) {
             if (activeSection.speed === 0 && activeSection.state === "active") {
 
-                // Generate a list of target sections.
+                // Generate a list of possible target sections.
                 let targetSectionsArray = new Array;
                 groupArray.forEach (function (targetGroup){
                     if (activeGroup.team !== targetGroup.team){
@@ -777,16 +525,23 @@ const passTurn = function (groupArray) {
                     // Select a random section. All units of active section will attack the units within.
                     let targetedSection = selectTarget(targetSectionsArray);
 
-                    // TODO: Determine Behaviour of Section here.
-                    let behaviour = behaviourAttack;
+                    // Collect unique behaviours from units.
+                    let validBehaviours = new Set;
+                    activeSection.units.forEach(function(unit) {
+                        unit.behaviours.forEach(function(behaviour) {
+                            validBehaviours.add(behaviour);
+                        })
+                    });
+                    validBehaviours = Array.from(validBehaviours);
+                    let sectionBehaviour = validBehaviours[Math.floor(Math.random()*validBehaviours.length)];
                     
                     logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " units within.");
+                    logArray.push(sectionBehaviour.prototype.constructor.name)
                     logArray.push("----------");
 
                     // Check if behavior engenders Point Defense
-                    if (behaviour === behaviourAttack) {
+                    if (sectionBehaviour === behaviourCloseAttack) {
                         if (hasPointDefense(targetedSection)) {
-                            logArray.push(targetedSection.name + " initiates point defense.");
                             targetedSection.units.forEach(function(unit) {
 
                                 // Check that there are any possible units left to target in the section.
@@ -802,7 +557,6 @@ const passTurn = function (groupArray) {
                         }
                     }
 
-                    logArray.push(activeSection.name + " initiates general attack.");
                     activeSection.units.forEach(function(unit) {
 
                         // TODO: Alter behaviour based on Morale here.
@@ -810,7 +564,7 @@ const passTurn = function (groupArray) {
 
                         // Check that there are any possible units left to target in the section.
                         if (targetedSection.units.length > 0) {
-                            behaviour(logArray, unit, targetedSection);
+                            sectionBehaviour(logArray, unit, targetedSection);
                         } else {
                             console.log(unit.name + " cannot find any units left in the enemy section.")
                         }
@@ -833,6 +587,261 @@ const passTurn = function (groupArray) {
     // Print log array.
     printArray(logArray);
 };
+
+// Models
+
+// Weapons
+const KX9LaserCannon = [
+    "KX9 Laser Cannon",
+    1,
+    5,
+    "energy",
+    25
+]
+const H9Turbolaser = [
+    "H9 Turbolaser",
+    5,
+    10,
+    "energy",
+    -10
+]
+const XX9HeavyTurbolaser = [
+    "XX9 Heavy Turbolaser",
+    20,
+    30,
+    "energy",
+    -25
+]
+const NK7IonCannon = [
+    "NK-7 Ion Cannon",
+    10,
+    20,
+    "ion",
+    -20
+]
+
+// Weapon Systems
+const KX9LaserArray = [
+    "KX-9 Laser Array",
+    [
+        construct(Weapon, KX9LaserCannon),
+        construct(Weapon, KX9LaserCannon),
+        construct(Weapon, KX9LaserCannon),
+        construct(Weapon, KX9LaserCannon)
+    ]
+]
+const H9TurbolaserTurret = [
+    "H9 Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const H9DualTurbolaserTurret = [
+    "H9 Dual Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+
+const XX9QuadHeavyTurbolaserTurret = [
+    "XX9 Quad Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const XX9TripleHeavyTurbolaserTurret = [
+    "XX9 Triple Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const XX9DualHeavyTurbolaserTurret = [
+    "XX9 Dual Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const XX9HeavyTurbolaserTurret = [
+    "XX9 Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const XX9HeavyTurbolaserx20 = [
+    "XX9 Heavy Turbolaser Grid",
+    [
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+    ]
+]
+const NK7DualHeavyIonCannonTurret = [
+    "NK7 Dual Heavy Ion Cannon Turret",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon)
+    ]
+]
+
+const NK7IonCannonx20 = [
+    "NK-7 Ion Cannon Grid",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+    ]
+]
+const NK7IonCannonx15 = [
+    "NK-7 Ion Cannon Grid",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+    ]
+]
+const NK7IonCannonx10 = [
+    "NK-7 Ion Cannon Grid",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+    ]
+]
+
+const XWing = [
+    "T65 X-Wing",
+    "Fighter",
+    10,
+    10,
+    1,
+    2,
+    65,
+    [
+        construct(WeaponSystem, KX9LaserArray, ["primary"])
+    ],
+    [behaviourCloseAttack]
+];
+const CR90Corvette = [
+    "CR90 'Corellian' Corvette",
+    "Corvette",
+    30,
+    20,
+    3,
+    5,
+    45,
+    [
+        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"]),
+        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"])
+    ],
+    [behaviourLongAttack]
+];
+const Imperial1 = [
+    "Imperial I-class Star Destroyer",
+    "Capital",
+    1000,
+    1000,
+    5,
+    10,
+    5,
+    [
+        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["primary"]),
+        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["secondary"]),
+        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["pointDefense"]),
+
+        construct(WeaponSystem, NK7IonCannonx20, ["primary"]),
+        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
+        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
+        construct(WeaponSystem, NK7IonCannonx10, ["pointDefense"]),
+
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
+
+        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
+        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
+
+        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
+
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
+
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
+    ],
+    [behaviourLongAttack]
+];
 
 
 // Setup
