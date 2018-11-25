@@ -720,20 +720,14 @@ for (let i = 0; i < 100; i++) {
     const remainingTeams = checkTeams(combatants);
     
     if (remainingTeams === 1) {
-        combatants.forEach(function(combatant) {
-            if (combatant.state === "active") {
-                printString("The winner is " + combatant.name + "!");
-                displayCombatants(combatants);
-                i = 100;
-            }
-        })
+        printString("Combat has ended!");
+        i = 100;
+        displayCombatants(combatants);
     } else if (remainingTeams === 0) {
         printString("Somehow, everyone is dead. Whoops!");
         displayCombatants(combatants);
         i = 100;
-    }
-    
-    else {
+    } else {
         if (i !== 0 && i % 5 === 0) displayCombatants(combatants);
         passTurn(combatants);
     }
