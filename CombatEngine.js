@@ -87,9 +87,11 @@ function WeaponSystem (name, weapons) {
     this.weapons = weapons;
     this.state = 'active'
 }
-function Weapon (name, damage) {
+function Weapon (name, minDamage, maxDamage, accuracy) {
     this.name = name;
-    this.damage = damage;
+    this.minDamage = minDamage;
+    this.maxDamage = maxDamage;
+    this.accuracy = accuracy;
     this.state = 'active'
 }
 
@@ -110,11 +112,33 @@ function construct(constructor, args, additions) {
 
 // Models
 
+// Weapons
 const KX9LaserCannon = [
     "KX9 Laser Cannon",
+    1,
+    5,
+    25
+]
+const H9Turbolaser = [
+    "H9 Turbolaser",
+    5,
+    10,
     5
 ]
+const XX9HeavyTurbolaser = [
+    "XX9 Heavy Turbolaser",
+    20,
+    30,
+    5
+]
+const NK7IonCannon = [
+    "NK-7 Ion Cannon",
+    15,
+    30,
+    10
+]
 
+// Weapon Systems
 const KX9LaserArray = [
     "KX-9 Laser Array",
     [
@@ -122,6 +146,148 @@ const KX9LaserArray = [
         construct(Weapon, KX9LaserCannon),
         construct(Weapon, KX9LaserCannon),
         construct(Weapon, KX9LaserCannon)
+    ]
+]
+const H9TurbolaserTurret = [
+    "H9 Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const H9DualTurbolaserTurret = [
+    "H9 Dual Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+
+const XX9QuadHeavyTurbolaserTurret = [
+    "XX9 Quad Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const XX9TripleHeavyTurbolaserTurret = [
+    "XX9 Triple Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const XX9DualHeavyTurbolaserTurret = [
+    "XX9 Dual Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser),
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+const XX9HeavyTurbolaserTurret = [
+    "XX9 Heavy Turbolaser Turret",
+    [
+        construct(Weapon, H9Turbolaser)
+    ]
+]
+
+const XX9HeavyTurbolaserx20 = [
+    "XX9 Heavy Turbolaser Grid (20)",
+    [
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+        construct(Weapon, XX9HeavyTurbolaser),
+    ]
+]
+
+const NK7DualHeavyIonCannonTurret = [
+    "NK7 Dual Heavy Ion Cannon Turret",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon)
+    ]
+]
+
+const NK7IonCannonx20 = [
+    "NK-7 Ion Cannon Grid (20)",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+    ]
+]
+const NK7IonCannonx15 = [
+    "NK-7 Ion Cannon Grid (15)",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+    ]
+]
+const NK7IonCannonx10 = [
+    "NK-7 Ion Cannon Grid (10)",
+    [
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
+        construct(Weapon, NK7IonCannon),
     ]
 ]
 
@@ -133,6 +299,54 @@ const XWing = [
     50,
     [
         construct(WeaponSystem, KX9LaserArray)
+    ]
+];
+
+const CorellianCorvette = [
+    "CR90 Corvette",
+    30,
+    20,
+    3,
+    30,
+    [
+        construct(WeaponSystem, H9DualTurbolaserTurret),
+        construct(WeaponSystem, H9DualTurbolaserTurret),
+        construct(WeaponSystem, H9TurbolaserTurret),
+        construct(WeaponSystem, H9TurbolaserTurret),
+        construct(WeaponSystem, H9TurbolaserTurret),
+        construct(WeaponSystem, H9TurbolaserTurret)
+    ]
+];
+
+const Imperial1 = [
+    "Imperial I-class Star Destroyer",
+    5000,
+    5000,
+    5,
+    5,
+    [
+        construct(WeaponSystem, XX9HeavyTurbolaserx20),
+        construct(WeaponSystem, XX9HeavyTurbolaserx20),
+        construct(WeaponSystem, XX9HeavyTurbolaserx20),
+        construct(WeaponSystem, NK7IonCannonx20),
+        construct(WeaponSystem, NK7IonCannonx15),
+        construct(WeaponSystem, NK7IonCannonx15),
+        construct(WeaponSystem, NK7IonCannonx10),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, NK7DualHeavyIonCannonTurret),
+        construct(WeaponSystem, NK7DualHeavyIonCannonTurret),
+        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
+        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret),
     ]
 ];
 
@@ -159,24 +373,31 @@ const constructString = function (log) {
 
     if (!log.def) return "DEBUG: All defenders killed. Invalid target.";
 
+    // Log initial activity.
+    logString += log.atk.name + " fires at " + log.def.name + " using " + log.system.name + "."
+
     // How many hits
-    if (log.hits > 0) logString += log.atk.name + " hit " + log.def.name + " " + log.hits + " times using " + log.system.name + ". ";
-    else logString += log.atk.name + " missed their shots against " + log.def.name + ". ";
+    if (log.hits > 1) logString += " It hit " + log.hits + " times!";
+    else if (log.hits === 1) logString += " It hit!";
+    else logString += " " + log.atk.name + " missed their shots against " + log.def.name + ". ";
+
     // If damage was soaked by armour.
-    if (log.soaks > 0) logString += log.soaks + " shots were soaked by armour. ";
+    if (log.soaks > 0) logString += " " + log.soaks + " shots were soaked by armour. ";
+
     // Tabulate all damage against a single target's shields.
-    if (log.spDam > 0) logString += log.atk.name + " dealt " + log.spDam + " shield damage. ";
+    if (log.spDam > 0) logString += " " + log.atk.name + " dealt " + log.spDam + " shield damage. ";
+
     // If they lost shields.
-    if (log.sBreak > 0) logString += " " + log.def.name + " has lost shields! ";
+    if (log.sBreak === true) logString += " " + log.def.name + " has lost shields! ";
+
     // Tabulate all damage against a single target's hull.
-    if (log.hpDam > 0) logString += log.atk.name + " dealt " + log.hpDam + " hull damage. ";
-    // If they were disabled.
-    if (log.disables > 0) logString += " " + log.def.name + " has been disabled! ";
+    if (log.hpDam > 0) logString += " " + log.atk.name + " dealt " + log.hpDam + " hull damage. ";
+
+    // // If they were disabled.
+    // if (log.disables > 0) logString += " " + log.def.name + " has been disabled! ";
+
     // If they were destroyed.
-    if (log.kills > 0) logString += " " + log.def.name + " has been destroyed! ";
-    else logString += log.def.name + ": ";
-    if (log.def.sp > 0) logString += log.def.sp + "/" + log.def.spMax + " SP. ";
-    if (log.def.hp > 0)  logString += log.def.hp + "/" + log.def.hpMax + " HP.";
+    if (log.kill === true) logString += " " + log.def.name + " has been destroyed! ";
 
     return logString;
 };
@@ -193,9 +414,10 @@ const displayCombatants = function (groups) {
         group.sections.forEach(function(section) {
             printString("--" + section.name + ", Initiative " + section.speed);
             section.units.forEach(function(unit) {
-                let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/10 Hull, " + unit.sp + "/10 Shield, ";
+                let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/" + unit.hpMax + " Hull, " + unit.sp + "/" + unit.spMax + " Shield.";
+                unitString += " Weapons:";
                 unit.wSystems.forEach(function(system) {
-                    unitString += system.name;
+                    unitString += ", " + system.name;
                 })
                 printString(unitString);
             })
@@ -216,8 +438,8 @@ const percentileRoll = function () {
 /**
  * Returns a random number for damage calculation.
  */
-const damageRoll = function (max) {
-    return Math.floor(Math.random()*max) + 1;
+const damageRoll = function (max, min) {
+    return Math.floor(Math.random() * (max - min) + min) + 1;
 };
 
 /**
@@ -292,7 +514,9 @@ const checkTeams = function (combatants) {
  * Calculates damage for an attack. Assigns to either shields or hull, and reduces by armour.
  */
 const damageCalc = function (logObjTurn, weapon, atk, def) {
-    let damage = damageRoll(weapon.damage);
+    let damage = damageRoll(weapon.maxDamage, weapon.minDamage);
+
+    console.log(atk.name + " dealt " + damage);
 
     // If target has shields, resolve shield damage. Otherwise, resolve hull damage.
     if (def.sp > 0) {
@@ -304,7 +528,7 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
             def.sp = 0;
 
             // Add Log Data
-            logObjTurn.sBreak += 1;
+            logObjTurn.sBreak = true;
         } else {
             def.sp = newSp;
         }
@@ -321,7 +545,6 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
             if (newDamage <= 0) {
                 // Add Log Data
                 logObjTurn.soaks += 1;
-                logObjTurn.armorReduction += damage;
 
                 damage = 0;
             } else {
@@ -340,7 +563,7 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
 
             // Add Log Data
             atk.kills += 1;
-            logObjTurn.kills += 1;
+            logObjTurn.kill = true;
         } else {
             def.hp = newHp;
         }
@@ -355,53 +578,69 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
  * Behaviour for General Unit attack.
  */
 const behaviourAttack = function (logArray, atk, targetSection) {
-    let logObjTurn = new Object;
-    logObjTurn.hits = 0;
-    logObjTurn.atk = atk;
-    logObjTurn.hpDam = 0;
-    logObjTurn.spDam = 0;
-    logObjTurn.kills = 0;
-    logObjTurn.sBreak = 0;
-    logObjTurn.soaks = 0;
+
+    // Redo Logs
+    // Each Unit makes a behaviour. In an attack, each weapon system picks a target, and each weapon fires.
+    // To start, log each attack: Miss, Hit, Soak, Damage, Kill.
+
+    // Sample Log
+    // Alpha takes a turn.
+    // Alpha fires with GunSys at Beta. It hits 2 times! Deals 5 Shield Damage. Beta has lost shields!
+    // Alpha fires with GunSys at Beta. It hits 0 times!
+    // Alpha fires with GunSys at Beta. It hits 1 times! Damage has been soaked by armor.
 
     atk.wSystems.forEach(function(system) {
-        logObjTurn.system = system;
-        let def = selectTarget(targetSection.units);
-        let evasion = def.evasion;
-        logObjTurn.def = def;
+        
+        if (targetSection.units.length > 0) {
+            let def = selectTarget(targetSection.units);
+            let evasion = def.evasion;
 
-        // For each weapon, roll an attack and resolve the damage
-        // If we destroy the unit, remove it from targets and into casualties.
-        // If target is not active, all shots miss.
-        system.weapons.forEach(function(weapon) {
-            // If the unit has not been destroyed.
-            if (def.state === "active") {
-                const roll = percentileRoll();
+            let logObjTurn = new Object;
+            logObjTurn.atk = atk;
+            logObjTurn.def = def;
+            logObjTurn.system = system;
+            logObjTurn.hits = 0;
+            logObjTurn.hpDam = 0;
+            logObjTurn.spDam = 0;
+            logObjTurn.soaks = 0;
+            logObjTurn.kill = false;
+            logObjTurn.sBreak = false;
 
-                // If attack hits, calculate damage.
-                if (roll >= evasion) {
+            // For each weapon, roll an attack and resolve the damage
+            // If we destroy the unit, remove it from targets and into casualties.
+            // If target is not active, all shots miss.
+            system.weapons.forEach(function(weapon) {
+                // If the unit has not been destroyed.
+                if (def.state === "active") {
+                    const roll = percentileRoll() + weapon.accuracy;
 
-                    // Log Data
-                    logObjTurn.hits += 1;
+                    // If attack hits, calculate damage.
+                    if (roll >= evasion) {
 
-                    damageCalc(logObjTurn, weapon, atk, def);
+                        // Log Data
+                        logObjTurn.hits += 1;
 
-                    if (def.state === "destroyed") {
-                        removeUnit(def, targetSection.units, targetSection.casualties);
-                        if (targetSection.units.length === 0) {
-                            targetSection.state = "destroyed";
-                            console.log("All units in " + targetSection.name + " destroyed.");
+                        damageCalc(logObjTurn, weapon, atk, def);
+
+                        // If unit was destroyed by the attack, remove it.
+                        if (def.state === "destroyed") {
+                            removeUnit(def, targetSection.units, targetSection.casualties);
+                            // If that was the last unit of the section, destroy it.
+                            if (targetSection.units.length === 0) {
+                                targetSection.state = "destroyed";
+                                console.log("All units in " + targetSection.name + " destroyed.");
+                            }
                         }
                     }
+                } else {
+                    console.log(atk.name + " has destroyed this unit. Shot misses.");
                 }
-            } else {
-                console.log(atk.name + " has destroyed this unit. Shot misses.");
-            }
-        })
-    })
+            })
 
-    // Log result of behaviour
-    logArray.push(constructString(logObjTurn));
+            // Log result of behaviour
+            logArray.push(constructString(logObjTurn));
+        }
+    })
 };
 
 /**
@@ -530,19 +769,9 @@ let RedForce = new Group(
     1,
     [
         new Section(
-            "Red Raiders",
+            "Red Rack",
             [
-                construct(Unit, XWing, ["Red Alpha"]),
-                construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"]),
-            ]
-        ),
-        new Section(
-            "Red Roaders",
-            [
-                construct(Unit, XWing, ["Red Alpha"]),
-                construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"]),
+                construct(Unit, Imperial1, ["Red Empire"])
             ]
         ),
     ]
@@ -553,19 +782,9 @@ let BlueForce = new Group(
     2,
     [
         new Section(
-            "Blue Batallion",
+            "Blue Ball",
             [
-                construct(Unit, XWing, ["Blue Alpha"]),
-                construct(Unit, XWing, ["Blue Beta"]),
-                construct(Unit, XWing, ["Blue Gamma"]),
-            ]
-        ),
-        new Section(
-            "Blue Band",
-            [
-                construct(Unit, XWing, ["Blue Alpha"]),
-                construct(Unit, XWing, ["Blue Beta"]),
-                construct(Unit, XWing, ["Blue Gamma"]),
+                construct(Unit, Imperial1, ["Blue Empire"])
             ]
         ),
     ]
@@ -573,7 +792,7 @@ let BlueForce = new Group(
 
 let GreenForce = new Group(
     "Green Force",
-    3,
+    2,
     [
         new Section(
             "Green Gunners",
@@ -586,9 +805,9 @@ let GreenForce = new Group(
         new Section(
             "Green Garrison",
             [
-                construct(Unit, XWing, ["Green Alpha"]),
-                construct(Unit, XWing, ["Green Beta"]),
-                construct(Unit, XWing, ["Green Gamma"]),
+                construct(Unit, XWing, ["Green Delta"]),
+                construct(Unit, XWing, ["Green Epsilon"]),
+                construct(Unit, XWing, ["Green Zeta"]),
             ]
         ),
     ]
@@ -600,7 +819,7 @@ let GreenForce = new Group(
 let combatants = new Array;
 combatants.push(RedForce);
 combatants.push(BlueForce);
-combatants.push(GreenForce);
+// combatants.push(GreenForce);
 // combatants.push(YellowForce);
 
 printString("Combat Start");
