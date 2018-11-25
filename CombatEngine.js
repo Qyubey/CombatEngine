@@ -477,79 +477,122 @@ const passTurn = function (groupArray) {
 
 // Setup
 
-// Assembly function:
-// Accepts Type of Constuctor, Args for Constructor, and Additions (which are added to args).
-// To assemble unit, pass (Unit, UnitStats, ["name"])
-// To assemble section, pass (Section, [[Units]], ["name"])
-// To assemble group, pass (Group, [[Sections]], ["name", team])
+// Can Either Use
+// let RedForce = construct(
+//     Group,
+//     [[
+//         construct(
+//             Section,
+//             [[
+//                 construct(Unit, XWing, ["Red Alpha"]),
+//                 construct(Unit, XWing, ["Red Beta"]),
+//                 construct(Unit, XWing, ["Red Gamma"])
+//             ]],
+//             ["Red Raiders"]),
+//         construct(
+//             Section,
+//             [[
+//                 construct(Unit, XWing, ["Red Delta"]),
+//                 construct(Unit, XWing, ["Red Epsilon"]),
+//                 construct(Unit, XWing, ["Red Zeta"])
+//             ]],
+//             ["Red Roaders"])
+//     ]],
+//     ["Red Force", 1]);
+//
+// OR
+//
+// let RedForce = new Group(
+//     "Red Force",
+//     1,
+//     [
+//         new Section(
+//             "Red Raiders",
+//             [
+//                 construct(Unit, XWing, ["Red Alpha"]),
+//                 construct(Unit, XWing, ["Red Beta"]),
+//                 construct(Unit, XWing, ["Red Gamma"]),
+//             ]
+//         ),
+//         new Section(
+//             "Red Roaders",
+//             [
+//                 construct(Unit, XWing, ["Red Alpha"]),
+//                 construct(Unit, XWing, ["Red Beta"]),
+//                 construct(Unit, XWing, ["Red Gamma"]),
+//             ]
+//         ),
+//     ]
+// )
 
-// let RedAlpha = construct(Unit, XWing, ["Red Alpha"]);
-// let RedBeta = construct(Unit, XWing, ["Red Beta"]);
-// let RedGamma = construct(Unit, XWing, ["Red Gamma"]);
-
-// let RedDelta = construct(Unit, XWing, ["Red Delta"]);
-// let RedEpsilon = construct(Unit, XWing, ["Red Epsilon"]);
-// let RedZeta = construct(Unit, XWing, ["Red Zeta"]);
-
-// let RedRaiders = construct(Section, [[RedAlpha, RedBeta, RedGamma]], ["Red Raiders"]);
-// let RedRoaders = construct(Section, [[RedDelta, RedEpsilon, RedZeta]], ["Red Roaders"]);
-
-// let RedForce = construct(Group, [[RedRaiders, RedRoaders]], ["Red Force", 1]);
-
-// let RedAlpha = construct(Unit, XWing, ["Red Alpha"]);
-// let RedBeta = construct(Unit, XWing, ["Red Beta"]);
-// let RedGamma = construct(Unit, XWing, ["Red Gamma"]);
-
-// let RedDelta = construct(Unit, XWing, ["Red Delta"]);
-// let RedEpsilon = construct(Unit, XWing, ["Red Epsilon"]);
-// let RedZeta = construct(Unit, XWing, ["Red Zeta"]);
-
-// let RedRaiders = construct(Section, [[RedAlpha, RedBeta, RedGamma]], ["Red Raiders"]);
-// let RedRoaders = construct(Section, [[RedDelta, RedEpsilon, RedZeta]], ["Red Roaders"]);
-
-let RedForce = construct(
-    Group,
-    [[
-        construct(
-            Section,
-            [[
+let RedForce = new Group(
+    "Red Force",
+    1,
+    [
+        new Section(
+            "Red Raiders",
+            [
                 construct(Unit, XWing, ["Red Alpha"]),
                 construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"])
-            ]],
-            ["Red Raiders"]),
-        construct(
-            Section,
-            [[
-                construct(Unit, XWing, ["Red Delta"]),
-                construct(Unit, XWing, ["Red Epsilon"]),
-                construct(Unit, XWing, ["Red Zeta"])
-            ]],
-            ["Red Roaders"])
-    ]],
-    ["Red Force", 1]);
+                construct(Unit, XWing, ["Red Gamma"]),
+            ]
+        ),
+        new Section(
+            "Red Roaders",
+            [
+                construct(Unit, XWing, ["Red Alpha"]),
+                construct(Unit, XWing, ["Red Beta"]),
+                construct(Unit, XWing, ["Red Gamma"]),
+            ]
+        ),
+    ]
+)
 
-let BlueForce = construct(
-    Group,
-    [[
-        construct(
-            Section,
-            [[
+let BlueForce = new Group(
+    "Blue Force",
+    2,
+    [
+        new Section(
+            "Blue Batallion",
+            [
                 construct(Unit, XWing, ["Blue Alpha"]),
                 construct(Unit, XWing, ["Blue Beta"]),
-                construct(Unit, XWing, ["Blue Gamma"])
-            ]],
-            ["Blue Band"]),
-        construct(
-            Section,
-            [[
-                construct(Unit, XWing, ["Blue Delta"]),
-                construct(Unit, XWing, ["Blue Epsilon"]),
-                construct(Unit, XWing, ["Blue Zeta"])
-            ]],
-            ["Blue Bombers"])
-    ]],
-    ["Blue Force", 2]);
+                construct(Unit, XWing, ["Blue Gamma"]),
+            ]
+        ),
+        new Section(
+            "Blue Band",
+            [
+                construct(Unit, XWing, ["Blue Alpha"]),
+                construct(Unit, XWing, ["Blue Beta"]),
+                construct(Unit, XWing, ["Blue Gamma"]),
+            ]
+        ),
+    ]
+)
+
+let GreenForce = new Group(
+    "Green Force",
+    3,
+    [
+        new Section(
+            "Green Gunners",
+            [
+                construct(Unit, XWing, ["Green Alpha"]),
+                construct(Unit, XWing, ["Green Beta"]),
+                construct(Unit, XWing, ["Green Gamma"]),
+            ]
+        ),
+        new Section(
+            "Green Garrison",
+            [
+                construct(Unit, XWing, ["Green Alpha"]),
+                construct(Unit, XWing, ["Green Beta"]),
+                construct(Unit, XWing, ["Green Gamma"]),
+            ]
+        ),
+    ]
+)
 
 // Execution
 
@@ -557,7 +600,7 @@ let BlueForce = construct(
 let combatants = new Array;
 combatants.push(RedForce);
 combatants.push(BlueForce);
-// combatants.push(GreenForce);
+combatants.push(GreenForce);
 // combatants.push(YellowForce);
 
 printString("Combat Start");
