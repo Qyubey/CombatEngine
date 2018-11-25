@@ -57,7 +57,7 @@
 
 function Group (sections, name, team) {
     this.sections = sections;
-    this.state = 'active'
+    this.state = 'active';
 
     // construct args
     this.name = name;
@@ -67,7 +67,7 @@ function Section (units, name) {
     this.units = units;
     this.speed = 0;
     this.casualties = [];
-    this.state = 'active'
+    this.state = 'active';
 
     // construct args
     this.name = name;
@@ -85,7 +85,7 @@ function Unit (unitName, type, hp, sp, armor, speed, evasion, wSystems, name) {
     this.wSystems = wSystems;
     this.kills = 0;
     this.totalDamageDealt = 0;
-    this.state = 'active'
+    this.state = 'active';
 
     // construct args
     this.name = name;
@@ -93,7 +93,7 @@ function Unit (unitName, type, hp, sp, armor, speed, evasion, wSystems, name) {
 function WeaponSystem (name, weapons, setting) {
     this.name = name;
     this.weapons = weapons;
-    this.state = 'active'
+    this.state = 'active';
 
     // construct args
     this.setting = setting;
@@ -104,7 +104,7 @@ function Weapon (name, minDamage, maxDamage, damageType, accuracy, setting) {
     this.maxDamage = maxDamage;
     this.damageType = damageType;
     this.accuracy = accuracy;
-    this.state = 'active'
+    this.state = 'active';
 }
 
 /**
