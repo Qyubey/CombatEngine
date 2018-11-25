@@ -2,11 +2,29 @@
 
 // TODO List
 
-// Refactor Weapon Range.
+// Add section AI. Dependant on type.
+// Fighters will engage fighters, close range first.
+// Corvettes do the same.
+// Frigates and Capitals attack the highest threat (damage potential) ships first.
+// Add special AI.
+// Bombing run will target capitals and frigates with heavy close range weapons.
+// Bombardment will target capitals and frigates with heavy long range weapons.
+// Seek & Destroy will target fighters with entire armament.
 
-// Add in ship types. Fighter, Corvette, Frigate, Capital.
+// Refactor Weapon Range.
+// For now, make it so that a section must move into close range to another section.
+// If two ships are 'sticky' to each other, they have close attacks. Otherwise they have long.
+// If a section closes in on another section, they switch close to that section.
+// Can only be close to one section at a time.
+
+// Add geographic Regions.
+// There are 6 regions in a combat zone. All share borders with each other and the outside.
+// Sections exist in regions, and regions determine range.
+// If two sections are in the same region, they are in close range. Otherwise, they are at long range.
+// Ships can move to another region by performing move behaviour on their turn.
+
 // Refactor Shields. Add Bypass and Drain.
-// Add in Armour reduction. Add Pierce and Shred.
+// Refactor Armour. Add Pierce and Shred.
 // Add in Components. Shield Gen, Bridge, Engines, Battery, etc.
 
 // Add Weapon System targeting.
@@ -16,6 +34,11 @@
 // Anti-Capital: Only attacks Frigate and Capital units.
 // Point-Defense: Retaliates against attackers on their attack.
 // Secondary: Only attacks during a designated behaviour.
+
+// Offensive: Attacks during any offensive behaviour.
+// Defensive: Retaliates during enemy attacks.
+// Conserved: Attacks until ammo/power runs low.
+// Specialised: Attacks only during a specified behaviour/AI.
 
 // Add Weapon Ranges
 // Weapons have a range they work best at; close and long range.
@@ -50,12 +73,12 @@
 // Sections are Destroyed or Disabled if Hangar is destroyed, or Carrier is disabled.
 // Sections are Destroyed if Carrier is Destroyed.
 
-// Consider adding distance functionality. Ships must move to engage.
-
 // Manual turn buttons.
+// Form list to edit groups mid-battle.
+// Can set groups to be uneditable, for playable strategic battles.
 
 // List all details of all Units, Weapons, Components to external file.
-// Allow easy construction of units from said file.
+// Allow easy construction of objects from said file.
 // Export behaviour functions to external file. Clears up space.
 
 
