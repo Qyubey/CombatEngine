@@ -2,7 +2,7 @@
 
 // TODO List
 
-// Create functions to assemble units from fed data, rather than a huge const.
+// Refactor Weapon Range.
 
 // Add in more ship types. Fighter, Corvette, Frigate, Capital.
 // Refactor Shields. Add Bypass and Drain.
@@ -16,6 +16,12 @@
 // Anti-Capital: Only attacks Frigate and Capital units.
 // Point-Defense: Retaliates against attackers on their attack.
 // Secondary: Only attacks during a designated behaviour.
+
+// Add Weapon Ranges
+// Weapons have a range they work best at; close and long range.
+// Weapons can fire in either range, but recieve a To-Hit penalty for inappropriate range.
+// This simulates large weapons working best at range, and small weapons working best up close.
+// Range should be optional, for weapons for which range doesn't matter.
 
 // Add more Weapon types, and power/ammo systems.
 // Lasers       use low power,  do low damage,  high accuracy.
@@ -100,12 +106,13 @@ function WeaponSystem (name, weapons, setting) {
     // construct args
     this.setting = setting;
 }
-function Weapon (name, minDamage, maxDamage, damageType, accuracy, setting) {
+function Weapon (name, minDamage, maxDamage, damageType, accuracy, range) {
     this.name = name;
     this.minDamage = minDamage;
     this.maxDamage = maxDamage;
     this.damageType = damageType;
     this.accuracy = accuracy;
+    this.range = range;
     this.state = 'active';
 }
 
@@ -262,7 +269,6 @@ const checkGroups = function (allGroups) {
         }
     })
 }
-
 /**
  * Checks how many teams are still active in the fight.
  * @param {*} combatants    List of all combatantants
@@ -291,6 +297,21 @@ const checkTeams = function (combatants) {
     })
     // Return the list of active teams.
     return remainingTeams;
+}
+
+/**
+ * Checks if the section has any units with PD weapon systems.
+ */
+const hasPointDefense = function (section) {
+    let pdFound = false;
+    section.units.forEach(function(unit) {
+        unit.wSystems.forEach(function(system){
+            if (system.setting === "pointDefense") {
+                pdFound = true;
+            }
+        });
+    }) 
+    return pdFound;
 }
 
 // Attack functions
@@ -379,10 +400,15 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
 /**
  * Rolls an attack against a defender. If defender dies, they are removed from their section.
  */
-const rollAttack = function (logObjTurn, weapon, atk, def, defSection) {
+const rollAttack = function (logObjTurn, weapon, atk, def, defSection, engageRange) {
     // If the unit has not been destroyed.
     if (def.state === "active") {
-        const roll = percentileRoll() + weapon.accuracy;
+
+        // TODO: Refactor range penalties.
+        let rangePenality = 0;
+        // if (engageRange && weapon.range !== engageRange) rangePenality -= 50;
+
+        const roll = percentileRoll() + weapon.accuracy + rangePenality;
 
         // If attack hits, calculate damage.
         if (roll >= def.evasion) {
@@ -409,7 +435,7 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection) {
 /**
  * Selects targets for each weapon system on the attacker.
  */
-const selectSystemTargets = function (logArray, atk, targetSection, activeSetting) {
+const selectSystemTargets = function (logArray, atk, targetSection, activeSetting, engageRange) {
     // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
 
@@ -421,11 +447,11 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
             // If we destroy the unit, remove it from targets and into casualties.
             // If target is not active, all shots miss.
             system.weapons.forEach(function(weapon) {
-                rollAttack(logObjTurn, weapon, atk, def, targetSection);
+                rollAttack(logObjTurn, weapon, atk, def, targetSection, engageRange);
             })
 
             // Log result of attack
-            logArray.push(constructString(logObjTurn));
+            if (!!logObjTurn) logArray.push(constructString(logObjTurn));
         
         }
     })
@@ -437,32 +463,38 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
 const behaviourCloseAttack = function (logArray, atk, targetSection) {
     logArray.push(atk.name + " initiates close attack.");
     let activeSetting = "primary";
+    let engageRange = "close";
 
-    selectSystemTargets(logArray, atk, targetSection, activeSetting);
+    selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
 
 }
 // LongAttack: Unit attacks at long range using Primary weapons. No PD.
 const behaviourLongAttack = function (logArray, atk, targetSection) {
     logArray.push(atk.name + " initiates long attack.");
     let activeSetting = "primary";
+    let engageRange = "long";
 
-    selectSystemTargets(logArray, atk, targetSection, activeSetting);
+    selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
 
 }
 // Flee: Unit attempts to leave combat. Does not attack.
-const behaviourFlee = function (logArray, unit) {
-    logArray.push(atk.name + " attempts to flee.");
-
+const behaviourFlee = function (logArray, unit, unitSection) {
+    logArray.push(unit.name + " hyperspaces away!");
+    removeUnit(unit, unitSection.units, unitSection.escapees);
+    // If that was the last unit of the section, destroy it.
+    if (unitSection.units.length === 0) {
+        unitSection.state = "destroyed";
+        console.log("All units in " + unitSection.name + " destroyed.");
+    }
 }
-
 // PD: Unit fires PD weapons before they are attacked.
 const behaviourPD = function (logArray, atk, targetSection) {
     logArray.push(atk.name + " initiates point defense.");
     let activeSetting = "pointDefense";
+    let engageRange = "close";
 
-    selectSystemTargets(logArray, atk, targetSection, activeSetting);
+    selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
 }
-
 /**
  * Behaviour for General Unit attack.
  */
@@ -475,21 +507,6 @@ const behaviourAttack = function (logArray, atk, targetSection) {
 
 
 // Turn Functions
-
-/**
- * Checks if the section has any units with PD weapon systems.
- */
-const hasPointDefense = function (section) {
-    let pdFound = false;
-    section.units.forEach(function(unit) {
-        unit.wSystems.forEach(function(system){
-            if (system.setting === "pointDefense") {
-                pdFound = true;
-            }
-        });
-    }) 
-    return pdFound;
-}
 
 /**
  * Handles turn calculations.
@@ -557,17 +574,25 @@ const passTurn = function (groupArray) {
                         }
                     }
 
-                    activeSection.units.forEach(function(unit) {
+                    // Create a temporary list of units, in case they flee or are destroyed.
+                    let unitList = new Array;
+                    unitList = unitList.concat(activeSection.units);
+                    unitList.forEach(function(unit) {
 
-                        // TODO: Alter behaviour based on Morale here.
-                        // TODO: For each unit in section, execute behaviour.
-
-                        // Check that there are any possible units left to target in the section.
-                        if (targetedSection.units.length > 0) {
-                            sectionBehaviour(logArray, unit, targetedSection);
+                        // Check for Conditional Behaviour, such as Fleeing.
+                        if (unit.hp <= 3) {
+                            logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
+                            sectionBehaviour = behaviourFlee;
+                            sectionBehaviour(logArray, unit, activeSection);
                         } else {
-                            console.log(unit.name + " cannot find any units left in the enemy section.")
+                            // Check that there are any possible units left to target in the section.
+                            if (targetedSection.units.length > 0) {
+                                sectionBehaviour(logArray, unit, targetedSection);
+                            } else {
+                                console.log(unit.name + " cannot find any units left in the enemy section.")
+                            }
                         }
+                        console.log(unit.name);
 
                         // Check if any group has been completely destroyed
                         checkGroups(groupArray);
@@ -596,28 +621,32 @@ const KX9LaserCannon = [
     1,
     5,
     "energy",
-    25
+    25,
+    "close"
 ]
 const H9Turbolaser = [
     "H9 Turbolaser",
     5,
     10,
     "energy",
-    -10
+    -10,
+    "long"
 ]
 const XX9HeavyTurbolaser = [
     "XX9 Heavy Turbolaser",
     20,
     30,
     "energy",
-    -25
+    -25,
+    "long"
 ]
 const NK7IonCannon = [
     "NK-7 Ion Cannon",
     10,
     20,
     "ion",
-    -20
+    -20,
+    "long"
 ]
 
 // Weapon Systems
@@ -857,8 +886,8 @@ let RedForce = new Group(
                 construct(Unit, XWing, ["Red Delta"]),
                 construct(Unit, XWing, ["Red Epsilon"]),
                 construct(Unit, XWing, ["Red Zeta"]),
-                construct(Unit, CR90Corvette, ["Blockrunner"]),
-                construct(Unit, CR90Corvette, ["Hammerhead"]),
+                // construct(Unit, CR90Corvette, ["Blockrunner"]),
+                // construct(Unit, CR90Corvette, ["Hammerhead"]),
             ],
             "Red Raiders"
         ),
@@ -900,7 +929,7 @@ let GreenForce = new Group(
         ),
     ],
     "Green Force",
-    2
+    3
 )
 
 // Execution
@@ -922,8 +951,8 @@ const setSpeed = function (section) {
 // Battle Loop
 let combatants = new Array;
 combatants.push(RedForce);
-combatants.push(BlueForce);
-// combatants.push(GreenForce);
+// combatants.push(BlueForce);
+combatants.push(GreenForce);
 // combatants.push(YellowForce);
 
 combatants.forEach(function(combatant) {
