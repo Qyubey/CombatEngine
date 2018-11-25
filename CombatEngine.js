@@ -50,7 +50,7 @@ function Section (name, units, speed) {
     this.casualties = [];
     this.state = 'active'
 }
-function Unit (name, unitName, wSystems, hp, sp, evasion) {
+function Unit (name, unitName, wSystems, hp, sp, armor, evasion) {
     this.name = name;
     this.unitName = unitName;
     this.wSystems = wSystems;
@@ -58,6 +58,7 @@ function Unit (name, unitName, wSystems, hp, sp, evasion) {
     this.sp = sp;
     this.hpMax = hp;
     this.spMax = sp;
+    this.armor = armor;
     this.evasion = evasion;
     this.kills = 0;
     this.totalDamageDealt = 0;
@@ -100,6 +101,8 @@ const constructString = function (log) {
     // How many hits
     if (log.hits > 0) logString += log.atk.name + " hit " + log.def.name + " " + log.hits + " times using " + log.system.name + ". ";
     else logString += log.atk.name + " missed their shots against " + log.def.name + ". ";
+    // If damage was soaked by armour.
+    if (log.soaks > 0) logString += log.soaks + " shots were soaked by armour. ";
     // Tabulate all damage against a single target's shields.
     if (log.spDam > 0) logString += log.atk.name + " dealt " + log.spDam + " shield damage. ";
     // If they lost shields.
@@ -230,35 +233,60 @@ const checkTeams = function (combatants) {
 const damageCalc = function (logObjTurn, weapon, atk, def) {
     let damage = damageRoll(weapon.damage);
 
-    if (def.sp === 0) {
-        def.hp -= damage;
+    // If target has shields, resolve shield damage. Otherwise, resolve hull damage.
+    if (def.sp > 0) {
+        let newSp = def.sp - damage;
+        
+        // If we reduced sp to or below zero, the shield has been lost.
+        if (newSp <= 0) {
+            damage = def.sp;
+            def.sp = 0;
 
-        if (def.hp <= 0) {
+            // Add Log Data
+            logObjTurn.sBreak += 1;
+        } else {
+            def.sp = newSp;
+        }
+
+        // Add Log Data
+        atk.totalDamageDealt += damage;
+        logObjTurn.spDam += damage;
+    } else {
+        // Reduce Hull damage by armor
+        if (def.armor > 0) {
+            let newDamage = damage - def.armor;
+
+            // If we reduced damage to or below zero.
+            if (newDamage <= 0) {
+                // Add Log Data
+                logObjTurn.soaks += 1;
+                logObjTurn.armorReduction += damage;
+
+                damage = 0;
+            } else {
+                // Add Log Data
+                damage = newDamage;
+            }
+        }
+
+        let newHp = def.hp - damage;
+        
+        // If we reduced hp to or below zero, the unit has been destroyed.
+        if (newHp <= 0) {
+            damage = def.hp;
             def.hp = 0;
             def.state = 'destroyed';
 
             // Add Log Data
             atk.kills += 1;
             logObjTurn.kills += 1;
+        } else {
+            def.hp = newHp;
         }
 
         // Add Log Data
         atk.totalDamageDealt += damage;
         logObjTurn.hpDam += damage;
-
-    } else {
-        def.sp -= damage;
-
-        if (def.sp <= 0) {
-            def.sp = 0;
-
-            // Add Log Data
-            logObjTurn.sBreak += 1;
-        }
-
-        // Add Log Data
-        atk.totalDamageDealt += damage;
-        logObjTurn.spDam += damage;
     }
 };
 
@@ -273,6 +301,7 @@ const behaviourAttack = function (logArray, atk, targetSection) {
     logObjTurn.spDam = 0;
     logObjTurn.kills = 0;
     logObjTurn.sBreak = 0;
+    logObjTurn.soaks = 0;
 
     atk.wSystems.forEach(function(system) {
         logObjTurn.system = system;
@@ -401,7 +430,7 @@ let RedForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Red Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array",
                         [
@@ -410,7 +439,7 @@ let RedForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Red Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array",
                         [
@@ -419,7 +448,7 @@ let RedForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random() * 3)
         ),
@@ -434,7 +463,7 @@ let RedForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Red Epsilon", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array",
                         [
@@ -443,7 +472,7 @@ let RedForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Red Zeta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array",
                         [
@@ -452,7 +481,7 @@ let RedForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random() * 3)
         )
@@ -473,7 +502,7 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Blue Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -482,7 +511,7 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Blue Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                         [
@@ -491,7 +520,7 @@ let BlueForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random()*3)
         ),
@@ -506,7 +535,7 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Blue Epsilon", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -515,7 +544,7 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Blue Zeta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -524,7 +553,7 @@ let BlueForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random()*3)
         )
@@ -545,7 +574,7 @@ let GreenForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Green Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -554,7 +583,7 @@ let GreenForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Green Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                         [
@@ -563,7 +592,7 @@ let GreenForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random()*3)
         ),
@@ -578,7 +607,7 @@ let GreenForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Green Epsilon", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -587,7 +616,7 @@ let GreenForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Green Zeta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -596,7 +625,7 @@ let GreenForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random()*3)
         )
@@ -617,7 +646,7 @@ let YellowForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Yellow Beta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -626,7 +655,7 @@ let YellowForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Yellow Gamma", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                         [
@@ -635,7 +664,7 @@ let YellowForce = new Group(
                             new Weapon("KX9 Laser Cannon", 5),
                             new Weapon("KX9 Laser Cannon", 5),
                         ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random()*3)
         ),
@@ -650,7 +679,7 @@ let YellowForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Yellow Epsilon", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -659,7 +688,7 @@ let YellowForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
                 new Unit("Yellow Zeta", "T65 X-Wing", [
                     new WeaponSystem("KX-9 Laser Array", 
                     [
@@ -668,7 +697,7 @@ let YellowForce = new Group(
                         new Weapon("KX9 Laser Cannon", 5),
                         new Weapon("KX9 Laser Cannon", 5),
                     ])
-                ], 10, 10, 50),
+                ], 10, 10, 1, 50),
             ],
             Math.floor(Math.random()*3)
         )
