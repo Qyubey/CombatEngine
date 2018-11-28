@@ -334,7 +334,7 @@ const removeUnit = function (unit, activeArray, deadArray) {
 /**
  * Returns a random active element from the given array.
  */
-const selectTarget = function (array) {
+const selectRandomTarget = function (array) {
     let validTargets = array.filter(function(element) {
         return element.state === 'active';
     });
@@ -579,14 +579,19 @@ const sortByPreference = function (targetUnits, prefOptions) {
 /**
  * Selects targets for each weapon system on the attacker.
  */
-const selectSystemTargets = function (logArray, atk, targetSection, activeSetting, engageRange) {
+const selectSystemTargets = function (logArray, atk, targetSection, targetPreferences, engageRange) {
     // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
 
         if (targetSection.units.length > 0) {
+            // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
             let targetUnitArray = targetSection.units;
-            // TODO: If we are selecting a specific type of unit, do it here.
-            let def = selectTarget(targetUnitArray, {type: "Corvette"});
+            let def = {};
+            if (targetPreferences) {
+                def = sortByPreference(targetUnitArray, targetPreferences)[0];
+            } else {
+                def = selectRandomTarget(targetUnitArray);
+            }
             // Create a new log for the system attack
             let logObjTurn = new LogTurnObject(atk, def, system);
 
@@ -680,7 +685,7 @@ const passTurn = function (groupArray) {
                     // TODO: AI for targeting goes here.
 
                     // Select a random section. All units of active section will attack the units within.
-                    let targetedSection = selectTarget(targetSectionsArray);
+                    let targetedSection = selectRandomTarget(targetSectionsArray);
 
                     // Collect unique behaviours from units.
                     let validBehaviours = new Set;
@@ -1123,69 +1128,69 @@ let BlueForce = new Group(
         // ),
         new Section(
             [
-                construct(Unit, TIEFighter, ["TIE-1"]),
-                construct(Unit, TIEFighter, ["TIE-2"]),
-                construct(Unit, TIEFighter, ["TIE-3"]),
-                construct(Unit, TIEFighter, ["TIE-4"]),
-                construct(Unit, TIEFighter, ["TIE-5"]),
-                construct(Unit, TIEFighter, ["TIE-6"]),
-                construct(Unit, TIEFighter, ["TIE-7"]),
-                construct(Unit, TIEFighter, ["TIE-8"]),
-                construct(Unit, TIEFighter, ["TIE-9"]),
-                construct(Unit, TIEFighter, ["TIE-10"]),
-                construct(Unit, TIEFighter, ["TIE-11"]),
-                construct(Unit, TIEFighter, ["TIE-12"]),
+                construct(Unit, TIEFighter, ["TIE-1a"]),
+                construct(Unit, TIEFighter, ["TIE-2a"]),
+                construct(Unit, TIEFighter, ["TIE-3a"]),
+                construct(Unit, TIEFighter, ["TIE-4a"]),
+                construct(Unit, TIEFighter, ["TIE-5a"]),
+                construct(Unit, TIEFighter, ["TIE-6a"]),
+                construct(Unit, TIEFighter, ["TIE-7a"]),
+                construct(Unit, TIEFighter, ["TIE-8a"]),
+                construct(Unit, TIEFighter, ["TIE-9a"]),
+                construct(Unit, TIEFighter, ["TIE-10a"]),
+                construct(Unit, TIEFighter, ["TIE-11a"]),
+                construct(Unit, TIEFighter, ["TIE-12a"]),
             ],
             "TIE Squadron 1"
         ),
         new Section(
             [
-                construct(Unit, TIEFighter, ["TIE-1"]),
-                construct(Unit, TIEFighter, ["TIE-2"]),
-                construct(Unit, TIEFighter, ["TIE-3"]),
-                construct(Unit, TIEFighter, ["TIE-4"]),
-                construct(Unit, TIEFighter, ["TIE-5"]),
-                construct(Unit, TIEFighter, ["TIE-6"]),
-                construct(Unit, TIEFighter, ["TIE-7"]),
-                construct(Unit, TIEFighter, ["TIE-8"]),
-                construct(Unit, TIEFighter, ["TIE-9"]),
-                construct(Unit, TIEFighter, ["TIE-10"]),
-                construct(Unit, TIEFighter, ["TIE-11"]),
-                construct(Unit, TIEFighter, ["TIE-12"]),
+                construct(Unit, TIEFighter, ["TIE-1b"]),
+                construct(Unit, TIEFighter, ["TIE-2b"]),
+                construct(Unit, TIEFighter, ["TIE-3b"]),
+                construct(Unit, TIEFighter, ["TIE-4b"]),
+                construct(Unit, TIEFighter, ["TIE-5b"]),
+                construct(Unit, TIEFighter, ["TIE-6b"]),
+                construct(Unit, TIEFighter, ["TIE-7b"]),
+                construct(Unit, TIEFighter, ["TIE-8b"]),
+                construct(Unit, TIEFighter, ["TIE-9b"]),
+                construct(Unit, TIEFighter, ["TIE-10b"]),
+                construct(Unit, TIEFighter, ["TIE-11b"]),
+                construct(Unit, TIEFighter, ["TIE-12b"]),
             ],
             "TIE Squadron 2"
         ),
         new Section(
             [
-                construct(Unit, TIEFighter, ["TIE-1"]),
-                construct(Unit, TIEFighter, ["TIE-2"]),
-                construct(Unit, TIEFighter, ["TIE-3"]),
-                construct(Unit, TIEFighter, ["TIE-4"]),
-                construct(Unit, TIEFighter, ["TIE-5"]),
-                construct(Unit, TIEFighter, ["TIE-6"]),
-                construct(Unit, TIEFighter, ["TIE-7"]),
-                construct(Unit, TIEFighter, ["TIE-8"]),
-                construct(Unit, TIEFighter, ["TIE-9"]),
-                construct(Unit, TIEFighter, ["TIE-10"]),
-                construct(Unit, TIEFighter, ["TIE-11"]),
-                construct(Unit, TIEFighter, ["TIE-12"]),
+                construct(Unit, TIEFighter, ["TIE-1c"]),
+                construct(Unit, TIEFighter, ["TIE-2c"]),
+                construct(Unit, TIEFighter, ["TIE-3c"]),
+                construct(Unit, TIEFighter, ["TIE-4c"]),
+                construct(Unit, TIEFighter, ["TIE-5c"]),
+                construct(Unit, TIEFighter, ["TIE-6c"]),
+                construct(Unit, TIEFighter, ["TIE-7c"]),
+                construct(Unit, TIEFighter, ["TIE-8c"]),
+                construct(Unit, TIEFighter, ["TIE-9c"]),
+                construct(Unit, TIEFighter, ["TIE-10c"]),
+                construct(Unit, TIEFighter, ["TIE-11c"]),
+                construct(Unit, TIEFighter, ["TIE-12c"]),
             ],
             "TIE Squadron 3"
         ),
         new Section(
             [
-                construct(Unit, TIEFighter, ["TIE-1"]),
-                construct(Unit, TIEFighter, ["TIE-2"]),
-                construct(Unit, TIEFighter, ["TIE-3"]),
-                construct(Unit, TIEFighter, ["TIE-4"]),
-                construct(Unit, TIEFighter, ["TIE-5"]),
-                construct(Unit, TIEFighter, ["TIE-6"]),
-                construct(Unit, TIEFighter, ["TIE-7"]),
-                construct(Unit, TIEFighter, ["TIE-8"]),
-                construct(Unit, TIEFighter, ["TIE-9"]),
-                construct(Unit, TIEFighter, ["TIE-10"]),
-                construct(Unit, TIEFighter, ["TIE-11"]),
-                construct(Unit, TIEFighter, ["TIE-12"]),
+                construct(Unit, TIEFighter, ["TIE-1d"]),
+                construct(Unit, TIEFighter, ["TIE-2d"]),
+                construct(Unit, TIEFighter, ["TIE-3d"]),
+                construct(Unit, TIEFighter, ["TIE-4d"]),
+                construct(Unit, TIEFighter, ["TIE-5d"]),
+                construct(Unit, TIEFighter, ["TIE-6d"]),
+                construct(Unit, TIEFighter, ["TIE-7d"]),
+                construct(Unit, TIEFighter, ["TIE-8d"]),
+                construct(Unit, TIEFighter, ["TIE-9d"]),
+                construct(Unit, TIEFighter, ["TIE-10d"]),
+                construct(Unit, TIEFighter, ["TIE-11d"]),
+                construct(Unit, TIEFighter, ["TIE-12d"]),
             ],
             "TIE Squadron 4"
         ),
