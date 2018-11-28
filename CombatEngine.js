@@ -321,13 +321,13 @@ const damageRoll = function (max, min) {
 /**
  * Removes a unit from an array, and returns it for insertion into 
  */
-const removeUnit = function (unit, array, deadArray) {
-    const index = array.indexOf(unit);
+const removeUnit = function (unit, activeArray, deadArray) {
+    const index = activeArray.indexOf(unit);
     if (deadArray) {
         deadArray.push(unit);
     }
     if (index !== -1) {
-        array.splice(index, 1);
+        activeArray.splice(index, 1);
     }
 }
 
@@ -534,6 +534,49 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection, engageRan
 }
 
 /**
+ * Sorts the array of targetUnits by a certain preference.
+ * Preference can be ship type, threat rating, shield rating, health rating, armor rating
+ * @param {*} targetUnits   Array of target units in a section.
+ * @param {*} targetPref    An object containing the target preference details.
+ */
+const sortByPreference = function (targetUnits, prefOptions) {
+    // Disassemble prefOptions. Type used for unit variable, order used for "high" or "low", and value used for sorting by a desired string or number.
+    let prefType = prefOptions.type;
+    let prefOrder = prefOptions.order;
+    let prefValue = prefOptions.value;
+    
+    const valueSortHighest = function (a, b) {
+        if (a[prefType] > b[prefType])
+            return -1;
+        if (a[prefType] < b[prefType])
+            return 1;
+        return 0;
+    }
+    const valueSortLowest = function (a, b) {
+        if (a[prefType] < b[prefType])
+            return -1;
+        if (a[prefType] > b[prefType])
+            return 1;
+        return 0;
+    }
+    const typeSort = function (a, b) {
+        if (a[prefType] === prefValue)
+            return -1;
+        else if (b[prefType] === prefValue)
+            return 1;
+        return 0;
+    }
+
+    if (prefValue) {
+        return targetUnits.sort(typeSort);
+    } else if (prefOrder === "high") {
+        return targetUnits.sort(valueSortHighest);
+    } else {
+        return targetUnits.sort(valueSortLowest);
+    }
+}
+
+/**
  * Selects targets for each weapon system on the attacker.
  */
 const selectSystemTargets = function (logArray, atk, targetSection, activeSetting, engageRange) {
@@ -541,7 +584,10 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
     atk.wSystems.forEach(function(system) {
 
         if (targetSection.units.length > 0) {
-            let def = selectTarget(targetSection.units);
+            let targetUnitArray = targetSection.units;
+            // TODO: If we are selecting a specific type of unit, do it here.
+            let def = selectTarget(targetUnitArray, {type: "Corvette"});
+            // Create a new log for the system attack
             let logObjTurn = new LogTurnObject(atk, def, system);
 
             // For each weapon, roll an attack and resolve the damage
@@ -551,9 +597,8 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
                 rollAttack(logObjTurn, weapon, atk, def, targetSection, engageRange);
             })
 
-            // Log result of attack
+            // Log result of system attack
             if (logObjTurn) logArray.push(constructString(logObjTurn));
-        
         }
     })
 }
@@ -664,9 +709,6 @@ const passTurn = function (groupArray) {
                             } else {
                                 console.log(unit.name + " cannot find any units left in the enemy section.")
                             }
-    
-                            // Check if any group has been completely destroyed for resolution purposes.
-                            checkGroups(groupArray);
                         })
                     }
 
@@ -692,10 +734,10 @@ const passTurn = function (groupArray) {
                                 console.log(unit.name + " cannot find any units left in the enemy section.")
                             }
                         }
-
-                        // Check if any group has been completely destroyed for resolution purposes.
-                        checkGroups(groupArray);
                     });
+                    // Check if any group has been completely destroyed for battle resolution purposes.
+                    checkGroups(groupArray);
+
                     logArray.push("----------");
                 }
 
