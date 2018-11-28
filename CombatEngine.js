@@ -145,7 +145,7 @@ function Group (sections, name, team) {
     this.name = name;
     this.team = team;
 }
-function Section (units, name) {
+function Section (units, name, targetPrefs) {
     this.units = units;
     this.speed = 0;
     this.casualties = [];
@@ -154,8 +154,9 @@ function Section (units, name) {
 
     // construct args
     this.name = name;
+    this.targetPrefs = targetPrefs;
 }
-function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours, name) {
+function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours, name, targetPrefs) {
     this.design = design;
     this.type = type;
     this.hp = hp;
@@ -173,14 +174,16 @@ function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours
 
     // construct args
     this.name = name;
+    this.targetPrefs = targetPrefs;
 }
-function WeaponSystem (name, weapons, setting) {
+function WeaponSystem (name, weapons, setting, targetPrefs) {
     this.name = name;
     this.weapons = weapons;
     this.state = 'active';
 
     // construct args
     this.setting = setting;
+    this.targetPrefs = targetPrefs;
 }
 function Weapon (name, minDamage, maxDamage, damageType, accuracy, range) {
     this.name = name;
@@ -389,18 +392,41 @@ const checkTeams = function (combatants) {
 }
 
 /**
- * Checks if the section has any units with PD weapon systems.
+ * Checks if the item has any PD weapon systems.
  */
-const hasPointDefense = function (section) {
+const hasPointDefense = function (checkitem) {
     let pdFound = false;
-    section.units.forEach(function(unit) {
-        unit.wSystems.forEach(function(system){
+    if (checkitem.units) {
+        checkitem.units.forEach(function(unit) {
+            unit.wSystems.forEach(function(system){
+                if (system.setting === "pointDefense") {
+                    pdFound = true;
+                }
+            });
+        })
+    } else {
+        checkitem.wSystems.forEach(function(system){
             if (system.setting === "pointDefense") {
                 pdFound = true;
             }
         });
-    }) 
+    }
     return pdFound;
+}
+
+/**
+ * Checks if the item has any the range for this attack.
+ */
+const hasWeaponWithRange = function (checkitem, range) {
+    let hasRange = false;
+    checkitem.wSystems.forEach(function(system){
+        system.weapons.forEach(function(weapon) {
+            if (weapon.range === range) {
+                hasRange = true;
+            }
+        })
+    });
+    return hasRange;
 }
 
 /**
@@ -420,11 +446,11 @@ const setSpeed = function (section) {
  * @param {*} targetUnits   Array of target units in a section.
  * @param {*} targetPref    An object containing the target preference details.
  */
-const sortByPreference = function (targetArray, prefOptions) {
-    // Disassemble prefOptions. Type used for unit variable, order used for "high" or "low", and value used for sorting by a desired string or number.
-    let prefType = prefOptions.type;
-    let prefOrder = prefOptions.order;
-    let prefValue = prefOptions.value;
+const sortByPreference = function (targetArray, targetPrefs) {
+    // Disassemble targetPrefs. Type used for unit variable, order used for "high" or "low", and value used for sorting by a desired string or number.
+    let prefType = targetPrefs.type;
+    let prefOrder = targetPrefs.order;
+    let prefValue = targetPrefs.value;
     
     const valueSortHighest = function (a, b) {
         if (a[prefType] > b[prefType])
@@ -462,8 +488,8 @@ const sortByPreference = function (targetArray, prefOptions) {
  * @param {*} targetUnits   Array of target units in a section.
  * @param {*} targetPref    An object containing the target preference details.
  */
-const sortSectionByUnitPreference = function (targetArray, prefOptions) {
-    let prefValue = prefOptions.value;
+const sortSectionByUnitPreference = function (targetArray, targetPrefs) {
+    let prefValue = targetPrefs.value;
     
     const typeSort = function (a, b) {
         if (a.types.indexOf(prefValue) > -1)
@@ -605,17 +631,18 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection, engageRan
 /**
  * Selects targets for each weapon system on the attacker.
  */
-const selectSystemTargets = function (logArray, atk, targetSection, engageRange) {
+const selectSystemTargets = function (logArray, atk, targetSection, engageRange, setting) {
     // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
+        // TODO: Setting determines which weapons systems can attack.
 
-        if (targetSection.units.length > 0) {
+        if (targetSection.units.length > 0 && system.setting === setting) {
             // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
             let targetUnitArray = targetSection.units;
             let def = {};
-            let targetPreferences = atk.targetPreferences;
-            if (targetPreferences) {
-                def = sortByPreference(targetUnitArray, targetPreferences)[0];
+            let unitTargetPrefs = atk.targetPrefs;
+            if (unitTargetPrefs) {
+                def = sortByPreference(targetUnitArray, unitTargetPrefs)[0];
             } else {
                 def = selectRandomTarget(targetUnitArray);
             }
@@ -644,17 +671,23 @@ const behaviourAttack = function (logArray, atk, targetSection) {
 };
 // CloseAttack: Unit attacks at close range using Primary weapons. PD retaliation.
 const behaviourCloseAttack = function (logArray, atk, targetSection) {
-    logArray.push(atk.name + " initiates a close-range attack.");
+    let activeSetting = "primary";
     let engageRange = "close";
+    if (hasWeaponWithRange(atk, engageRange)) {
+        logArray.push(atk.name + " initiates a close-range attack.");
 
-    selectSystemTargets(logArray, atk, targetSection, engageRange);
+        selectSystemTargets(logArray, atk, targetSection, engageRange, activeSetting);
+    }
 }
 // LongAttack: Unit attacks at long range using Primary weapons. No PD.
 const behaviourLongAttack = function (logArray, atk, targetSection) {
-    logArray.push(atk.name + " initiates a long-range attack.");
+    let activeSetting = "primary";
     let engageRange = "long";
-
-    selectSystemTargets(logArray, atk, targetSection, engageRange);
+    if (hasWeaponWithRange(atk, engageRange)) {
+        logArray.push(atk.name + " initiates a long-range attack.");
+    
+        selectSystemTargets(logArray, atk, targetSection, engageRange, activeSetting);
+    }
 }
 // Move: Unit moves to region of targeted section.
 const behaviourMoveRegion = function (logArray, activeSection, targetSection) {
@@ -677,7 +710,7 @@ const behaviourPD = function (logArray, atk, targetSection) {
     let activeSetting = "pointDefense";
     let engageRange = "close";
 
-    selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
+    selectSystemTargets(logArray, atk, targetSection, engageRange, activeSetting);
 }
 
 
@@ -696,7 +729,6 @@ const passTurn = function (groupArray) {
 
         // Iterate through each unit of active section.
         unitList.forEach(function(unit) {
-
             // Check for Conditional Behaviour, such as Fleeing.
             if (unit.hp <= (unit.hpMax * 0.3) ) {
                 logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
@@ -743,12 +775,12 @@ const passTurn = function (groupArray) {
 
                     // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
                     let targetedSection = {};
-                    let targetPreferences = activeSection.targetPreferences;
-                    if (targetPreferences) {
-                        if (targetPreferences.type === "design") {
-                            targetedSection = sortSectionByUnitPreference(targetSectionsArray, targetPreferences)[0];
+                    let sectionTargetPrefs = activeSection.targetPrefs;
+                    if (sectionTargetPrefs) {
+                        if (sectionTargetPrefs.type === "design") {
+                            targetedSection = sortSectionByUnitPreference(targetSectionsArray, sectionTargetPrefs)[0];
                         } else {
-                            targetedSection = sortByPreference(targetSectionsArray, targetPreferences)[0];
+                            targetedSection = sortByPreference(targetSectionsArray, sectionTargetPrefs)[0];
                         }
                     } else {
                         targetedSection = selectRandomTarget(targetSectionsArray);
@@ -779,7 +811,7 @@ const passTurn = function (groupArray) {
                             if (hasPointDefense(targetedSection)) {
                                 targetedSection.units.forEach(function(unit) {
                                     // Check that there are any possible units left to target in the section.
-                                    if (activeSection.units.length > 0) {
+                                    if (activeSection.units.length > 0 && hasPointDefense(unit)) {
                                         behaviourPD(logArray, unit, activeSection);
                                     } else {
                                         console.log(unit.name + " cannot find any units left in the enemy section.");
@@ -1118,12 +1150,12 @@ let RedForce = new Group(
                 construct(Unit, XWing, ["Red Beta"]),
                 construct(Unit, XWing, ["Red Gamma"]),
                 construct(Unit, XWing, ["Red Delta"]),
+                construct(Unit, CR90Corvette, ["Blockrunner"]),
             ],
             "Red Raiders 1"
         ),
         new Section(
             [
-                construct(Unit, CR90Corvette, ["Blockrunner"]),
             ],
             "Red Corvette"
         ),
@@ -1136,12 +1168,12 @@ let BlueForce = new Group(
     [
         new Section(
             [
-                construct(Unit, TIEFighter, ["TIE-1a"]),
-                construct(Unit, TIEFighter, ["TIE-2a"]),
-                construct(Unit, TIEFighter, ["TIE-3a"]),
-                construct(Unit, TIEFighter, ["TIE-4a"]),
-                construct(Unit, TIEFighter, ["TIE-5a"]),
-                construct(Unit, TIEFighter, ["TIE-6a"]),
+                construct(Unit, TIEFighter, ["TIE-1a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter, ["TIE-2a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter, ["TIE-3a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter, ["TIE-4a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter, ["TIE-5a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter, ["TIE-6a", {type: "type", value: "Corvette"}]),
             ],
             "TIE Squadron 1"
         ),
@@ -1159,35 +1191,6 @@ let BlueForce = new Group(
     ],
     "Blue Force",
     2
-)
-
-let GreenForce = new Group(
-    [
-        new Section(
-            [
-                construct(Unit, XWing, ["Green Alpha"]),
-                construct(Unit, XWing, ["Green Beta"]),
-                construct(Unit, XWing, ["Green Gamma"]),
-            ],
-            "Green Gunners"
-        ),
-        new Section(
-            [
-                construct(Unit, XWing, ["Green Delta"]),
-                construct(Unit, XWing, ["Green Epsilon"]),
-                construct(Unit, XWing, ["Green Zeta"]),
-            ],
-            "Green Garrison"
-        ),
-        new Section(
-            [
-                construct(Unit, CR90Corvette, ["Blockrunner"]),
-            ],
-            "Green Corvette"
-        ),
-    ],
-    "Green Force",
-    3
 )
 
 // Execution
