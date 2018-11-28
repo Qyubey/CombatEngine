@@ -607,15 +607,13 @@ const behaviourPD = function (logArray, atk, targetSection) {
  * Handles turn calculations.
  */
 const passTurn = function (groupArray) {
-    // Generate a Log Array
-    let logArray = [];
-
     // Iterate through each group
     groupArray.forEach (function (activeGroup){
-
         // For each section, check if it is the section's turn.
         activeGroup.sections.forEach(function(activeSection) {
             if (activeSection.speed === 0 && activeSection.state === "active") {
+                // Generate a Log Array
+                let logArray = [];
 
                 // Generate a list of possible target sections.
                 let targetSectionsArray = [];
@@ -632,7 +630,9 @@ const passTurn = function (groupArray) {
 
                 // Check that there are valid sections to target.
                 if (targetSectionsArray.length > 0) {
-                    logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " units within.");
+                    logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " active units within.");
+
+                    // TODO: AI for targeting goes here.
 
                     // Select a random section. All units of active section will attack the units within.
                     let targetedSection = selectTarget(targetSectionsArray);
@@ -645,51 +645,55 @@ const passTurn = function (groupArray) {
                         })
                     });
                     validBehaviours = Array.from(validBehaviours);
+
+                    // Choose a random behaviour for the section to execute.
                     let sectionBehaviour = validBehaviours[Math.floor(Math.random()*validBehaviours.length)];
                     
-                    logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " units within.");
+                    // Write Log data.
+                    logArray.push(targetedSection.name + " has been targeted. " + targetedSection.units.length + " active units within.");
                     logArray.push(sectionBehaviour.prototype.constructor.name)
                     logArray.push("----------");
 
-                    // Check if behavior engenders Point Defense
-                    if (sectionBehaviour === behaviourCloseAttack) {
-                        if (hasPointDefense(targetedSection)) {
-                            targetedSection.units.forEach(function(unit) {
+                    // Check if behaviour engenders Point Defense
+                    if (sectionBehaviour === behaviourCloseAttack && hasPointDefense(targetedSection)) {
 
-                                // Check that there are any possible units left to target in the section.
-                                if (activeSection.units.length > 0) {
-                                    behaviourPD(logArray, unit, activeSection);
-                                } else {
-                                    console.log(unit.name + " cannot find any units left in the enemy section.")
-                                }
-        
-                                // Check if any group has been completely destroyed
-                                checkGroups(groupArray);
-                            })
-                        }
+                        targetedSection.units.forEach(function(unit) {
+                            // Check that there are any possible units left to target in the section.
+                            if (activeSection.units.length > 0) {
+                                behaviourPD(logArray, unit, activeSection);
+                            } else {
+                                console.log(unit.name + " cannot find any units left in the enemy section.")
+                            }
+    
+                            // Check if any group has been completely destroyed for resolution purposes.
+                            checkGroups(groupArray);
+                        })
                     }
 
                     // Create a temporary list of units, in case they flee or are destroyed.
                     let unitList = [];
                     unitList = unitList.concat(activeSection.units);
+
+                    // Iterate through each unit of active section.
                     unitList.forEach(function(unit) {
 
                         // Check for Conditional Behaviour, such as Fleeing.
                         if (unit.hp <= (unit.hpMax * 0.3) ) {
                             logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
                             behaviourFlee(logArray, unit, activeSection);
+                        // Else begin section behaviour.
                         } else {
                             // Check that there are any possible units left to target in the section.
                             if (targetedSection.units.length > 0) {
+                                // Execute behaviour.
                                 behaviourAttack(logArray, unit, targetedSection);
                                 // sectionBehaviour(logArray, unit, targetedSection);
                             } else {
                                 console.log(unit.name + " cannot find any units left in the enemy section.")
                             }
                         }
-                        console.log(unit.name);
 
-                        // Check if any group has been completely destroyed
+                        // Check if any group has been completely destroyed for resolution purposes.
                         checkGroups(groupArray);
                     });
                     logArray.push("----------");
@@ -697,15 +701,15 @@ const passTurn = function (groupArray) {
 
                 // Reset speed/turn timer.
                 setSpeed(activeSection);
+
+                // Print log array.
+                printArray(logArray);
             } else { // If not your turn, tick speed.
                 if (activeSection.state === "active") activeSection.speed -= 1;
             }
         });
 
     })
-
-    // Print log array.
-    printArray(logArray);
 };
 
 // Models
