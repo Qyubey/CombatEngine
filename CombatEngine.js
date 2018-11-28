@@ -586,6 +586,12 @@ const selectSystemTargets = function (logArray, atk, targetSection, engageRange,
             // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
             let targetUnitArray = targetSection.units;
             let def = {};
+            if (atk.armor === 0) {
+                targetPreferences = {
+                    prefType: "type",
+                    prefValue: "Corvette"
+                }
+            }
             if (targetPreferences) {
                 def = sortByPreference(targetUnitArray, targetPreferences)[0];
             } else {
@@ -1081,18 +1087,18 @@ const Imperial1 = [
 
 let RedForce = new Group(
     [
+        // new Section(
+        //     [
+        //         construct(Unit, XWing, ["Red Alpha"]),
+        //         construct(Unit, XWing, ["Red Beta"]),
+        //         construct(Unit, XWing, ["Red Gamma"]),
+        //         construct(Unit, XWing, ["Red Delta"]),
+        //         construct(Unit, CR90Corvette, ["Blockrunner"]),
+        //     ],
+        //     "Red Raiders 1"
+        // ),
         new Section(
             [
-                construct(Unit, XWing, ["Red Alpha"]),
-                construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"]),
-                construct(Unit, XWing, ["Red Delta"]),
-            ],
-            "Red Raiders 1"
-        ),
-        new Section(
-            [
-                construct(Unit, CR90Corvette, ["Blockrunner"]),
             ],
             "Red Corvette"
         ),
@@ -1169,11 +1175,34 @@ combatants.push(BlueForce);
 // combatants.push(GreenForce);
 // combatants.push(YellowForce);
 
+// Clear out empty combatants
+for (let i = 0; i < combatants.length; i++) {
+    // Filter out any combatants with no sections.
+    if  (combatants[i].sections.length === 0) {
+        combatants.splice(i, 1);
+    } else {
+        // Filter out any sections with no units.
+        let sections = combatants[i].sections;
+        for (let i = 0; i < sections.length; i++) {
+            if  (sections[i].units.length === 0) {
+                sections.splice(i, 1);
+            }
+        }
+    }
+}
+// Check Combatant sections again, as we may have removed all sections from them.
+for (let i = 0; i < combatants.length; i++) {
+    if  (combatants[i].sections.length === 0) {
+        combatants.splice(i, 1);
+    }
+}
+console.log(combatants);
+
 // Set up Regions
 for (let i = 0; i < combatants.length*3; i++) {
     regions.push({name: "Region " + i, value: i, type: ""});
 }
-// Place section in a random region
+// Place each section in a random region
 for (let i = 0; i < combatants.length; i++) {
     // Available starting regions are limited to 3 places; middle and two flanks. Later will add options for above and below.
     let availableRegions = [i*3, i*3+1, i*3+2]
