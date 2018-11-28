@@ -1,50 +1,68 @@
 // SW
 
-// TODO List
+// Future Ideas
 
-// Add section AI. Dependant on type.
-// Fighters will engage fighters, close range first.
-// Corvettes do the same.
+// Normalize all statistics so any unit could fight another.
+// This is purely for fun and simulation, such as ground forces firing at a capital ship.
+
+// Import into Unity to provide better application and UI functions.
+// Could sell as a PC game or Mobile app.
+
+// Create libraries for various things.
+// Star Wars, Star Trek, Battlestar Galactica, Stargate, Halo, Lord of the Rings, Game of Thrones, Superheroes, XCOM.
+// Real world time periods; such as modern, WW1, WW2, Medieval, Antiquity, Stone age, etc.
+
+// Conquer/Campaign mode.
+// Strategic map mode like Empire At War, Dawn of War, or Civ.
+// Map consists of strategic nodes, which could represent anything.
+// Nodes can also have maps inside them. This allows simulation of planets, to ground locations, to even individual cities.
+// Economic and Diplomatic functionality.
+// Each faction generates revenue or resources. Can build on strategic nodes, and construct units.
+// Could engage diplomacy with the AI, or other players.
+// Save campaigns mid-way through and reload later.
+
+// Could be played multiplayer, either in realtime on map until a battle, or in turns. Or timed turns.
+// Load custom libraries and games, have other players download the library files.
+// Loading saved multiplayer games lets you slot players into factions, can switch midway through.
+// Host player hosts everything, can edit details of save or campaign. GM priviledges.
+
+
+// Version 1 features
+
+// Add AI General.
+// Acts for Section and Individual units. Selects targets.
+// AI Types are derived from the UnitType. May be overridden.
+// Fighters and Corvettes will engage fighters, close range first.
 // Frigates and Capitals attack the highest threat (damage potential) ships first.
-// Add special AI.
-// Bombing run will target capitals and frigates with heavy close range weapons.
-// Bombardment will target capitals and frigates with heavy long range weapons.
-// Seek & Destroy will target fighters with entire armament.
+// Regarldess of type, sections will generally continue attacking their target section until it is destroyed.
+// Add AI Specific.
+// Target Light will target fighters and corvettes.
+// Target Heavy will target capitals and frigates.
+// Target Type will target only that unit type.
+// Target Single will target a single section. Possibly a single unit as well.
 
-// Refactor Weapon Range.
-// For now, make it so that a section must move into close range to another section.
-// If two ships are 'sticky' to each other, they have close attacks. Otherwise they have long.
-// If a section closes in on another section, they switch close to that section.
-// Can only be close to one section at a time.
-
-// Add geographic Regions.
-// There are 6 regions in a combat zone. All share borders with each other and the outside.
+// Add Regions.
+// There are regions in a combat zone. All share borders with each other and the outside.
+// The amount of regions is 3 x the number of groups. These are considered; Middle, and Left/Right Flanks.
 // Sections exist in regions, and regions determine range.
 // If two sections are in the same region, they are in close range. Otherwise, they are at long range.
-// Ships can move to another region by performing move behaviour on their turn.
+// Sections can move to another region by performing move behaviour on their turn.
+// If a section wants to close attack another unit in a different section, it will instead move to that section first.
 
-// Refactor Shields. Add Bypass and Drain.
-// Refactor Armour. Add Pierce and Shred.
-// Add in Components. Shield Gen, Bridge, Engines, Battery, etc.
+// Add Ranges
+// Weapons have a range they work best at; close or long range.
+// Weapons may be locked to a specific range, or simply take to-hit penalties for attacking at the wrong range.
+// Weapons may be set to only attack in a specific range.
+// Sections may have a range they will only fire at, or may randomly select between the two.
 
-// Add Weapon System targeting.
-// Weapons can be set to a couple of different modes that determine if they will be used during an action.
-// Primary: Fires on any target during an attack.
-// Anti-Fighter: Only attacks Fighter and Corvette units.
-// Anti-Capital: Only attacks Frigate and Capital units.
+// Add Weapon System Setting.
+// Weapons can be set to a couple of different settings that determine if they will be used during an action.
+// Primary: Fires on any target during your attack.
+// Secondary: Only attacks while ammo/power is high.
+// Reserve: Only attacks during a designated behaviour.
 // Point-Defense: Retaliates against attackers on their attack.
-// Secondary: Only attacks during a designated behaviour.
-
-// Offensive: Attacks during any offensive behaviour.
-// Defensive: Retaliates during enemy attacks.
-// Conserved: Attacks until ammo/power runs low.
-// Specialised: Attacks only during a specified behaviour/AI.
-
-// Add Weapon Ranges
-// Weapons have a range they work best at; close and long range.
-// Weapons can fire in either range, but recieve a To-Hit penalty for inappropriate range.
-// This simulates large weapons working best at range, and small weapons working best up close.
-// Range should be optional, for weapons for which range doesn't matter.
+// Anti-Fighter: Only attacks Fighter and Corvette units during your attack.
+// Anti-Capital: Only attacks Frigate and Capital units during your attack.
 
 // Add more Weapon types, and power/ammo systems.
 // Lasers       use low power,  do low damage,  high accuracy.
@@ -54,7 +72,18 @@
 // Power weapons will need to cool down after shots.
 // Ammo weapons can be expended and will need to be restocked.
 
-// Add in AI behaviours
+// Refactor Shields. Add Bypass and Drain.
+// Drain allows weapons to deal 1.5x more damage against shields.
+// Bypass allows weapons to completely bypass a certain amount of shields.
+// Refactor Armour. Add Pierce and Shred.
+// Shred allows weapons to reduce the armour of a target on an attack
+// Pierce allows weapons to completely bypass a certain amount of armor.
+// Refactor Hull. Add Impact.
+// Impact allows weapons to deal 1.5x more damage against hull/health.
+
+// Add in Components. Shield Gen, Bridge, Engines, Battery, etc.
+
+// Add in Behaviours/Actions
 // Add in Bombing Run behaviour. Could be general attack.
 // Add in Aggressive Attack / No Survivors. Allows killing Disabled.
 // Add in Covering Fire behaviour. Adds counter-attack for another Section.
@@ -67,20 +96,44 @@
 // Move Disabled ships into Disabled array.
 // Disabled array is targetable for Aggressive Attack.
 
+// List all details of all Units, Weapons, Components to external file.
+// Allow easy construction of objects from said file.
+// Export behaviour functions to external file. Clears up space.
+
+
+// Version 2 features
+
+// Manual turn buttons.
+// Form list to edit groups mid-battle.
+// Can set groups to be uneditable, for playable strategic battles.
+
 // Add in carrier functionality.
 // Carriers must launch Sections. Are added into Sections array from Carrier Unit.
 // Damaged sections can dock with carrier to repair hp and shields. Are removed from Sections array and placed back in Carrier Unit.
 // Sections are Destroyed or Disabled if Hangar is destroyed, or Carrier is disabled.
 // Sections are Destroyed if Carrier is Destroyed.
 
-// Manual turn buttons.
-// Form list to edit groups mid-battle.
-// Can set groups to be uneditable, for playable strategic battles.
+// Version 3
 
-// List all details of all Units, Weapons, Components to external file.
-// Allow easy construction of objects from said file.
-// Export behaviour functions to external file. Clears up space.
+// Add battlefields. Types for Space, Air, Sea, and Ground.
+// Add two weapon ranges for Space/Air and Sea/Ground battles.
+// For example; close space/air lasers may be long sea/ground. Long sea/ground weapons may be close space/air.
+// Sea and Ground have unique regions for Above and Below.
+// Sea above and Ground above are accessible only by flying units.
+// Sea below is accessible only by submersible units.
+// Ground below is accessible only by subterrain units.
 
+// Add support for UnitTypes: Soldiers, Trucks, Tanks, Diggers, Sea Ships, Submarines, Planes.
+// Could either give all types a unique name, or categorize them inside a battlefield type.
+
+// Add more weapons like grenades, artillery cannons, melee weapons, torpedoes, etc.
+
+// Allow libraries for Units, Weapons, Weapon Systems.
+
+// Add Area Effect weapons. These target Regions themselves.
+// Undodgable, they incur damage to all units within the region. Can include friendlies.
+
+// Constants
 
 // Constructors
 
@@ -507,6 +560,11 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
 
 // Ship Behaviours
 
+// Debug: Behaviour for general unit attack.
+const behaviourAttack = function (logArray, atk, targetSection) {
+    logArray.push(atk.name + " initiates general attack.");
+    selectSystemTargets(logArray, atk, targetSection, null, null);
+};
 // CloseAttack: Unit attacks at close range using Primary weapons. PD retaliation.
 const behaviourCloseAttack = function (logArray, atk, targetSection) {
     logArray.push(atk.name + " initiates a close-range attack.");
@@ -514,7 +572,6 @@ const behaviourCloseAttack = function (logArray, atk, targetSection) {
     let engageRange = "close";
 
     selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
-
 }
 // LongAttack: Unit attacks at long range using Primary weapons. No PD.
 const behaviourLongAttack = function (logArray, atk, targetSection) {
@@ -523,7 +580,6 @@ const behaviourLongAttack = function (logArray, atk, targetSection) {
     let engageRange = "long";
 
     selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
-
 }
 // Flee: Unit attempts to leave combat. Does not attack.
 const behaviourFlee = function (logArray, unit, unitSection) {
@@ -543,13 +599,6 @@ const behaviourPD = function (logArray, atk, targetSection) {
 
     selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
 }
-// Debug: Behaviour for general unit attack.
-const behaviourAttack = function (logArray, atk, targetSection) {
-    logArray.push(atk.name + " initiates general attack.");
-    let activeSetting = "primary";
-
-    selectSystemTargets(logArray, atk, targetSection, activeSetting);
-};
 
 
 // Turn Functions
@@ -1132,6 +1181,7 @@ let GreenForce = new Group(
 console.log(GreenForce)
 
 // Battle Loop
+let regions = [];
 let combatants = new Array;
 combatants.push(RedForce);
 combatants.push(BlueForce);
@@ -1139,6 +1189,9 @@ combatants.push(BlueForce);
 // combatants.push(YellowForce);
 
 combatants.forEach(function(combatant) {
+    for (let i = 0; i < 3; i++) {
+        regions.push({name: "Region " + 1, type: "", sections: combatant.sections});
+    }
     combatant.sections.forEach(function(section) {
         setSpeed(section);
     })
