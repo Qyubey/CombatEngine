@@ -31,7 +31,7 @@
 
 // Add AI General.
 // Acts for Section and Individual units. Selects targets.
-// AI Types are derived from the UnitType. May be overridden.
+// AI Types are derived from the design. May be overridden.
 // Fighters and Corvettes will engage fighters, close range first.
 // Frigates and Capitals attack the highest threat (damage potential) ships first.
 // Regarldess of type, sections will generally continue attacking their target section until it is destroyed.
@@ -123,7 +123,7 @@
 // Sea below is accessible only by submersible units.
 // Ground below is accessible only by subterrain units.
 
-// Add support for UnitTypes: Soldiers, Trucks, Tanks, Diggers, Sea Ships, Submarines, Planes.
+// Add support for designs: Soldiers, Trucks, Tanks, Diggers, Sea Ships, Submarines, Planes.
 // Could either give all types a unique name, or categorize them inside a battlefield type.
 
 // Add more weapons like grenades, artillery cannons, melee weapons, torpedoes, etc.
@@ -155,8 +155,8 @@ function Section (units, name) {
     // construct args
     this.name = name;
 }
-function Unit (unitName, type, hp, sp, armor, speed, evasion, wSystems, behaviours, name) {
-    this.unitName = unitName;
+function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours, name) {
+    this.design = design;
     this.type = type;
     this.hp = hp;
     this.sp = sp;
@@ -276,7 +276,7 @@ const displayCombatants = function (groups) {
         group.sections.forEach(function(section) {
             printString("--" + section.name + ", Initiative " + section.speed);
             section.units.forEach(function(unit) {
-                let unitString = "----" + unit.name + ": " + unit.unitName + ", " + unit.hp + "/" + unit.hpMax + " Hull, " + unit.sp + "/" + unit.spMax + " Shield.";
+                let unitString = "----" + unit.name + ": " + unit.design + ", " + unit.hp + "/" + unit.hpMax + " Hull, " + unit.sp + "/" + unit.spMax + " Shield.";
                 unitString += " Weapons:";
                 unit.wSystems.forEach(function(system) {
                     unitString += ", " + system.name;
@@ -457,6 +457,33 @@ const sortByPreference = function (targetArray, prefOptions) {
     }
 }
 
+/**
+ * Sepcialised sorter for checking types of units inside.
+ * @param {*} targetUnits   Array of target units in a section.
+ * @param {*} targetPref    An object containing the target preference details.
+ */
+const sortSectionByUnitPreference = function (targetArray, prefOptions) {
+    let prefValue = prefOptions.value;
+    
+    const typeSort = function (a, b) {
+        if (a.types.indexOf(prefValue) > -1)
+            return -1;
+        else if (b.types.indexOf(prefValue) > -1)
+            return 1;
+        return 0;
+    }
+
+    targetArray.forEach(function(section) {
+        foundTypes = new Set;
+        section.units.forEach(function(unit) {
+            foundTypes.add(unit.type);
+        })
+        section.types = Array.from(foundTypes);
+    })
+
+    return targetArray.sort(typeSort);
+}
+
 // Attack functions
 
 // Turn Log Constructor
@@ -578,7 +605,7 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection, engageRan
 /**
  * Selects targets for each weapon system on the attacker.
  */
-const selectSystemTargets = function (logArray, atk, targetSection, engageRange, targetPreferences) {
+const selectSystemTargets = function (logArray, atk, targetSection, engageRange) {
     // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
 
@@ -586,12 +613,7 @@ const selectSystemTargets = function (logArray, atk, targetSection, engageRange,
             // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
             let targetUnitArray = targetSection.units;
             let def = {};
-            if (atk.armor === 0) {
-                targetPreferences = {
-                    prefType: "type",
-                    prefValue: "Corvette"
-                }
-            }
+            let targetPreferences = atk.targetPreferences;
             if (targetPreferences) {
                 def = sortByPreference(targetUnitArray, targetPreferences)[0];
             } else {
@@ -719,12 +741,15 @@ const passTurn = function (groupArray) {
                 if (targetSectionsArray.length > 0) {
                     logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " active units within.");
 
-                    // TODO: Allow targeting section by units within (type for example).
                     // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
                     let targetedSection = {};
-                    let targetPreferences = {};
+                    let targetPreferences = activeSection.targetPreferences;
                     if (targetPreferences) {
-                        targetedSection = sortByPreference(targetSectionsArray, targetPreferences)[0];
+                        if (targetPreferences.type === "design") {
+                            targetedSection = sortSectionByUnitPreference(targetSectionsArray, targetPreferences)[0];
+                        } else {
+                            targetedSection = sortByPreference(targetSectionsArray, targetPreferences)[0];
+                        }
                     } else {
                         targetedSection = selectRandomTarget(targetSectionsArray);
                     }
@@ -1087,18 +1112,18 @@ const Imperial1 = [
 
 let RedForce = new Group(
     [
-        // new Section(
-        //     [
-        //         construct(Unit, XWing, ["Red Alpha"]),
-        //         construct(Unit, XWing, ["Red Beta"]),
-        //         construct(Unit, XWing, ["Red Gamma"]),
-        //         construct(Unit, XWing, ["Red Delta"]),
-        //         construct(Unit, CR90Corvette, ["Blockrunner"]),
-        //     ],
-        //     "Red Raiders 1"
-        // ),
         new Section(
             [
+                construct(Unit, XWing, ["Red Alpha"]),
+                construct(Unit, XWing, ["Red Beta"]),
+                construct(Unit, XWing, ["Red Gamma"]),
+                construct(Unit, XWing, ["Red Delta"]),
+            ],
+            "Red Raiders 1"
+        ),
+        new Section(
+            [
+                construct(Unit, CR90Corvette, ["Blockrunner"]),
             ],
             "Red Corvette"
         ),
