@@ -535,7 +535,6 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection, engageRan
 
 /**
  * Sorts the array of targetUnits by a certain preference.
- * Preference can be ship type, threat rating, shield rating, health rating, armor rating
  * @param {*} targetUnits   Array of target units in a section.
  * @param {*} targetPref    An object containing the target preference details.
  */
