@@ -685,6 +685,7 @@ const passTurn = function (groupArray) {
                     // TODO: Allow targeting section by units within (type for example).
                     // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
                     let targetedSection = {};
+                    let targetPreferences = {};
                     if (targetPreferences) {
                         targetedSection = sortByPreference(targetSectionsArray, targetPreferences)[0];
                     } else {
@@ -1234,8 +1235,6 @@ let GreenForce = new Group(
 
 // Execution
 
-console.log(GreenForce)
-
 // Battle Loop
 let regions = [];
 let combatants = [];
@@ -1244,10 +1243,23 @@ combatants.push(BlueForce);
 // combatants.push(GreenForce);
 // combatants.push(YellowForce);
 
+// Set up Regions
+for (let i = 0; i < combatants.length*3; i++) {
+    regions.push({name: "Region " + i, value: i, type: ""});
+}
+// Place section in a random region
+for (let i = 0; i < combatants.length; i++) {
+    // Available starting regions are limited to 3 places; middle and two flanks. Later will add options for above and below.
+    let availableRegions = [
+        regions[i*3],
+        regions[i*3+1],
+        regions[i*3+2]
+    ]
+    combatants[i].sections.forEach(function(section) {
+        section.region = availableRegions[Math.floor(Math.random()*availableRegions.length)];
+    })
+}
 combatants.forEach(function(combatant) {
-    for (let i = 0; i < 3; i++) {
-        regions.push({name: "Region " + 1, type: "", sections: combatant.sections});
-    }
     combatant.sections.forEach(function(section) {
         setSpeed(section);
     })
