@@ -415,6 +415,48 @@ const setSpeed = function (section) {
     section.speed = highestSpeed;
 }
 
+/**
+ * Sorts the array provided by a certain preference. Works for numeric values, high and low, and strings.
+ * @param {*} targetUnits   Array of target units in a section.
+ * @param {*} targetPref    An object containing the target preference details.
+ */
+const sortByPreference = function (targetArray, prefOptions) {
+    // Disassemble prefOptions. Type used for unit variable, order used for "high" or "low", and value used for sorting by a desired string or number.
+    let prefType = prefOptions.type;
+    let prefOrder = prefOptions.order;
+    let prefValue = prefOptions.value;
+    
+    const valueSortHighest = function (a, b) {
+        if (a[prefType] > b[prefType])
+            return -1;
+        if (a[prefType] < b[prefType])
+            return 1;
+        return 0;
+    }
+    const valueSortLowest = function (a, b) {
+        if (a[prefType] < b[prefType])
+            return -1;
+        if (a[prefType] > b[prefType])
+            return 1;
+        return 0;
+    }
+    const typeSort = function (a, b) {
+        if (a[prefType] === prefValue)
+            return -1;
+        else if (b[prefType] === prefValue)
+            return 1;
+        return 0;
+    }
+
+    if (prefValue) {
+        return targetArray.sort(typeSort);
+    } else if (prefOrder === "high") {
+        return targetArray.sort(valueSortHighest);
+    } else {
+        return targetArray.sort(valueSortLowest);
+    }
+}
+
 // Attack functions
 
 // Turn Log Constructor
@@ -534,48 +576,6 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection, engageRan
 }
 
 /**
- * Sorts the array of targetUnits by a certain preference.
- * @param {*} targetUnits   Array of target units in a section.
- * @param {*} targetPref    An object containing the target preference details.
- */
-const sortByPreference = function (targetUnits, prefOptions) {
-    // Disassemble prefOptions. Type used for unit variable, order used for "high" or "low", and value used for sorting by a desired string or number.
-    let prefType = prefOptions.type;
-    let prefOrder = prefOptions.order;
-    let prefValue = prefOptions.value;
-    
-    const valueSortHighest = function (a, b) {
-        if (a[prefType] > b[prefType])
-            return -1;
-        if (a[prefType] < b[prefType])
-            return 1;
-        return 0;
-    }
-    const valueSortLowest = function (a, b) {
-        if (a[prefType] < b[prefType])
-            return -1;
-        if (a[prefType] > b[prefType])
-            return 1;
-        return 0;
-    }
-    const typeSort = function (a, b) {
-        if (a[prefType] === prefValue)
-            return -1;
-        else if (b[prefType] === prefValue)
-            return 1;
-        return 0;
-    }
-
-    if (prefValue) {
-        return targetUnits.sort(typeSort);
-    } else if (prefOrder === "high") {
-        return targetUnits.sort(valueSortHighest);
-    } else {
-        return targetUnits.sort(valueSortLowest);
-    }
-}
-
-/**
  * Selects targets for each weapon system on the attacker.
  */
 const selectSystemTargets = function (logArray, atk, targetSection, targetPreferences, engageRange) {
@@ -664,6 +664,7 @@ const passTurn = function (groupArray) {
                 // Generate a Log Array
                 let logArray = [];
 
+                // TODO: Allow targeting via group or team.
                 // Generate a list of possible target sections.
                 let targetSectionsArray = [];
                 groupArray.forEach (function (targetGroup){
@@ -681,10 +682,14 @@ const passTurn = function (groupArray) {
                 if (targetSectionsArray.length > 0) {
                     logArray.push(activeSection.name + " takes a turn. " + activeSection.units.length + " active units within.");
 
-                    // TODO: AI for targeting goes here.
-
-                    // Select a random section. All units of active section will attack the units within.
-                    let targetedSection = selectRandomTarget(targetSectionsArray);
+                    // TODO: Allow targeting section by units within (type for example).
+                    // If we are selecting a target by a preference, sort here and select the first. Else, pick randomly.
+                    let targetedSection = {};
+                    if (targetPreferences) {
+                        targetedSection = sortByPreference(targetSectionsArray, targetPreferences)[0];
+                    } else {
+                        targetedSection = selectRandomTarget(targetSectionsArray);
+                    }
 
                     // Collect unique behaviours from units.
                     let validBehaviours = new Set;
