@@ -578,7 +578,7 @@ const rollAttack = function (logObjTurn, weapon, atk, def, defSection, engageRan
 /**
  * Selects targets for each weapon system on the attacker.
  */
-const selectSystemTargets = function (logArray, atk, targetSection, targetPreferences, engageRange) {
+const selectSystemTargets = function (logArray, atk, targetSection, engageRange, targetPreferences) {
     // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
 
@@ -617,18 +617,21 @@ const behaviourAttack = function (logArray, atk, targetSection) {
 // CloseAttack: Unit attacks at close range using Primary weapons. PD retaliation.
 const behaviourCloseAttack = function (logArray, atk, targetSection) {
     logArray.push(atk.name + " initiates a close-range attack.");
-    let activeSetting = "primary";
     let engageRange = "close";
 
-    selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
+    selectSystemTargets(logArray, atk, targetSection, engageRange);
 }
 // LongAttack: Unit attacks at long range using Primary weapons. No PD.
 const behaviourLongAttack = function (logArray, atk, targetSection) {
     logArray.push(atk.name + " initiates a long-range attack.");
-    let activeSetting = "primary";
     let engageRange = "long";
 
-    selectSystemTargets(logArray, atk, targetSection, activeSetting, engageRange);
+    selectSystemTargets(logArray, atk, targetSection, engageRange);
+}
+// Move: Unit moves to region of targeted section.
+const behaviourMoveRegion = function (logArray, activeSection, targetSection) {
+    logArray.push(activeSection.name + " approaches " + targetSection.name + " in " + regions[targetSection.region].name + ".");
+    activeSection.region = targetSection.region;
 }
 // Flee: Unit attempts to leave combat. Does not attack.
 const behaviourFlee = function (logArray, unit, unitSection) {
@@ -656,6 +659,34 @@ const behaviourPD = function (logArray, atk, targetSection) {
  * Handles turn calculations.
  */
 const passTurn = function (groupArray) {
+
+    // Create function to resolve section's actions.
+    const sectionTurn = function (logArray, activeSection, targetedSection, sectionBehaviour) {
+        // Create a temporary list of units, in case they flee or are destroyed.
+        let unitList = [];
+        unitList = unitList.concat(activeSection.units);
+
+        // Iterate through each unit of active section.
+        unitList.forEach(function(unit) {
+
+            // Check for Conditional Behaviour, such as Fleeing.
+            if (unit.hp <= (unit.hpMax * 0.3) ) {
+                logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
+                behaviourFlee(logArray, unit, activeSection);
+            // Else begin section behaviour.
+            } else {
+                // Check that there are any possible units left to target in the section.
+                if (targetedSection.units.length > 0) {
+
+                // Execute behaviour.
+                sectionBehaviour(logArray, unit, targetedSection);
+                } else {
+                    console.log(unit.name + " cannot find any units left in the enemy section.")
+                }
+            }
+        });
+    }
+
     // Iterate through each group
     groupArray.forEach (function (activeGroup){
         // For each section, check if it is the section's turn.
@@ -709,42 +740,32 @@ const passTurn = function (groupArray) {
                     logArray.push(sectionBehaviour.prototype.constructor.name)
                     logArray.push("----------");
 
-                    // Check if behaviour engenders Point Defense
-                    if (sectionBehaviour === behaviourCloseAttack && hasPointDefense(targetedSection)) {
+                    // If close behaviour, check the distance.
+                    if (sectionBehaviour === behaviourCloseAttack) {
+                        if (activeSection.region === targetedSection.region) {
 
-                        targetedSection.units.forEach(function(unit) {
-                            // Check that there are any possible units left to target in the section.
-                            if (activeSection.units.length > 0) {
-                                behaviourPD(logArray, unit, activeSection);
-                            } else {
-                                console.log(unit.name + " cannot find any units left in the enemy section.")
+                            // Check if behaviour engenders Point Defense
+                            if (hasPointDefense(targetedSection)) {
+                                targetedSection.units.forEach(function(unit) {
+                                    // Check that there are any possible units left to target in the section.
+                                    if (activeSection.units.length > 0) {
+                                        behaviourPD(logArray, unit, activeSection);
+                                    } else {
+                                        console.log(unit.name + " cannot find any units left in the enemy section.");
+                                    }
+                                })
                             }
-                        })
+
+                            // Execute the section's turn
+                            sectionTurn(logArray, activeSection, targetedSection, sectionBehaviour);
+                        } else {
+                            behaviourMoveRegion(logArray, activeSection, targetedSection);
+                        }
+                    } else {
+                        // Execute the section's turn
+                        sectionTurn(logArray, activeSection, targetedSection, sectionBehaviour);
                     }
 
-                    // Create a temporary list of units, in case they flee or are destroyed.
-                    let unitList = [];
-                    unitList = unitList.concat(activeSection.units);
-
-                    // Iterate through each unit of active section.
-                    unitList.forEach(function(unit) {
-
-                        // Check for Conditional Behaviour, such as Fleeing.
-                        if (unit.hp <= (unit.hpMax * 0.3) ) {
-                            logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
-                            behaviourFlee(logArray, unit, activeSection);
-                        // Else begin section behaviour.
-                        } else {
-                            // Check that there are any possible units left to target in the section.
-                            if (targetedSection.units.length > 0) {
-                                // Execute behaviour.
-                                behaviourAttack(logArray, unit, targetedSection);
-                                // sectionBehaviour(logArray, unit, targetedSection);
-                            } else {
-                                console.log(unit.name + " cannot find any units left in the enemy section.")
-                            }
-                        }
-                    });
                     // Check if any group has been completely destroyed for battle resolution purposes.
                     checkGroups(groupArray);
 
@@ -1066,58 +1087,15 @@ let RedForce = new Group(
                 construct(Unit, XWing, ["Red Beta"]),
                 construct(Unit, XWing, ["Red Gamma"]),
                 construct(Unit, XWing, ["Red Delta"]),
-                // construct(Unit, XWing, ["Red Epsilon"]),
-                // construct(Unit, XWing, ["Red Zeta"]),
-                // construct(Unit, CR90Corvette, ["Blockrunner"]),
-                // construct(Unit, CR90Corvette, ["Hammerhead"]),
             ],
             "Red Raiders 1"
         ),
         new Section(
             [
-                construct(Unit, XWing, ["Red Alpha"]),
-                construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"]),
-                construct(Unit, XWing, ["Red Delta"]),
-                // construct(Unit, XWing, ["Red Epsilon"]),
-                // construct(Unit, XWing, ["Red Zeta"]),
-                // construct(Unit, CR90Corvette, ["Blockrunner"]),
-                // construct(Unit, CR90Corvette, ["Hammerhead"]),
+                construct(Unit, CR90Corvette, ["Blockrunner"]),
             ],
-            "Red Raiders 2"
+            "Red Corvette"
         ),
-        new Section(
-            [
-                construct(Unit, XWing, ["Red Alpha"]),
-                construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"]),
-                construct(Unit, XWing, ["Red Delta"]),
-                // construct(Unit, XWing, ["Red Epsilon"]),
-                // construct(Unit, XWing, ["Red Zeta"]),
-                // construct(Unit, CR90Corvette, ["Blockrunner"]),
-                // construct(Unit, CR90Corvette, ["Hammerhead"]),
-            ],
-            "Red Raiders 3"
-        ),
-        new Section(
-            [
-                construct(Unit, XWing, ["Red Alpha"]),
-                construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"]),
-                construct(Unit, XWing, ["Red Delta"]),
-                // construct(Unit, XWing, ["Red Epsilon"]),
-                // construct(Unit, XWing, ["Red Zeta"]),
-                // construct(Unit, CR90Corvette, ["Blockrunner"]),
-                // construct(Unit, CR90Corvette, ["Hammerhead"]),
-            ],
-            "Red Raiders 4"
-        ),
-        // new Section(
-        //     [
-        //         construct(Unit, CR90Corvette, ["Blockrunner"]),
-        //     ],
-        //     "Red Corvette"
-        // ),
     ],
     "Red Force",
     1
@@ -1125,12 +1103,6 @@ let RedForce = new Group(
 
 let BlueForce = new Group(
     [
-        // new Section(
-        //     [
-        //         construct(Unit, Imperial1, ["Imperial-1"])
-        //     ],
-        //     "Blue Star"
-        // ),
         new Section(
             [
                 construct(Unit, TIEFighter, ["TIE-1a"]),
@@ -1139,12 +1111,6 @@ let BlueForce = new Group(
                 construct(Unit, TIEFighter, ["TIE-4a"]),
                 construct(Unit, TIEFighter, ["TIE-5a"]),
                 construct(Unit, TIEFighter, ["TIE-6a"]),
-                construct(Unit, TIEFighter, ["TIE-7a"]),
-                construct(Unit, TIEFighter, ["TIE-8a"]),
-                construct(Unit, TIEFighter, ["TIE-9a"]),
-                construct(Unit, TIEFighter, ["TIE-10a"]),
-                construct(Unit, TIEFighter, ["TIE-11a"]),
-                construct(Unit, TIEFighter, ["TIE-12a"]),
             ],
             "TIE Squadron 1"
         ),
@@ -1156,49 +1122,9 @@ let BlueForce = new Group(
                 construct(Unit, TIEFighter, ["TIE-4b"]),
                 construct(Unit, TIEFighter, ["TIE-5b"]),
                 construct(Unit, TIEFighter, ["TIE-6b"]),
-                construct(Unit, TIEFighter, ["TIE-7b"]),
-                construct(Unit, TIEFighter, ["TIE-8b"]),
-                construct(Unit, TIEFighter, ["TIE-9b"]),
-                construct(Unit, TIEFighter, ["TIE-10b"]),
-                construct(Unit, TIEFighter, ["TIE-11b"]),
-                construct(Unit, TIEFighter, ["TIE-12b"]),
             ],
             "TIE Squadron 2"
-        ),
-        new Section(
-            [
-                construct(Unit, TIEFighter, ["TIE-1c"]),
-                construct(Unit, TIEFighter, ["TIE-2c"]),
-                construct(Unit, TIEFighter, ["TIE-3c"]),
-                construct(Unit, TIEFighter, ["TIE-4c"]),
-                construct(Unit, TIEFighter, ["TIE-5c"]),
-                construct(Unit, TIEFighter, ["TIE-6c"]),
-                construct(Unit, TIEFighter, ["TIE-7c"]),
-                construct(Unit, TIEFighter, ["TIE-8c"]),
-                construct(Unit, TIEFighter, ["TIE-9c"]),
-                construct(Unit, TIEFighter, ["TIE-10c"]),
-                construct(Unit, TIEFighter, ["TIE-11c"]),
-                construct(Unit, TIEFighter, ["TIE-12c"]),
-            ],
-            "TIE Squadron 3"
-        ),
-        new Section(
-            [
-                construct(Unit, TIEFighter, ["TIE-1d"]),
-                construct(Unit, TIEFighter, ["TIE-2d"]),
-                construct(Unit, TIEFighter, ["TIE-3d"]),
-                construct(Unit, TIEFighter, ["TIE-4d"]),
-                construct(Unit, TIEFighter, ["TIE-5d"]),
-                construct(Unit, TIEFighter, ["TIE-6d"]),
-                construct(Unit, TIEFighter, ["TIE-7d"]),
-                construct(Unit, TIEFighter, ["TIE-8d"]),
-                construct(Unit, TIEFighter, ["TIE-9d"]),
-                construct(Unit, TIEFighter, ["TIE-10d"]),
-                construct(Unit, TIEFighter, ["TIE-11d"]),
-                construct(Unit, TIEFighter, ["TIE-12d"]),
-            ],
-            "TIE Squadron 4"
-        ),
+        )
     ],
     "Blue Force",
     2
@@ -1250,13 +1176,10 @@ for (let i = 0; i < combatants.length*3; i++) {
 // Place section in a random region
 for (let i = 0; i < combatants.length; i++) {
     // Available starting regions are limited to 3 places; middle and two flanks. Later will add options for above and below.
-    let availableRegions = [
-        regions[i*3],
-        regions[i*3+1],
-        regions[i*3+2]
-    ]
+    let availableRegions = [i*3, i*3+1, i*3+2]
     combatants[i].sections.forEach(function(section) {
         section.region = availableRegions[Math.floor(Math.random()*availableRegions.length)];
+        console.log(section.region);
     })
 }
 combatants.forEach(function(combatant) {
