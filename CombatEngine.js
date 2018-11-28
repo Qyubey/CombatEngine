@@ -148,8 +148,8 @@ function Group (sections, name, team) {
 function Section (units, name) {
     this.units = units;
     this.speed = 0;
-    this.casualties = new Array;
-    this.escapees = new Array;
+    this.casualties = [];
+    this.escapees = [];
     this.state = 'active';
 
     // construct args
@@ -323,7 +323,7 @@ const damageRoll = function (max, min) {
  */
 const removeUnit = function (unit, array, deadArray) {
     const index = array.indexOf(unit);
-    if (!!deadArray) {
+    if (deadArray) {
         deadArray.push(unit);
     }
     if (index !== -1) {
@@ -369,9 +369,9 @@ const checkTeams = function (combatants) {
         teams.add(group.team);
     });
     // Create a counter for each team
-    let teamCounter = new Object;
+    let teamCounter = {};
     teams.forEach(function(team) {
-        teamCounter[team] = new Object;
+        teamCounter[team] = {};
         teamCounter[team].count = 0;
         teamCounter[team].name = team;
     })
@@ -540,7 +540,7 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
     // Systems grab valid targets.
     atk.wSystems.forEach(function(system) {
 
-        if (system.setting === activeSetting && targetSection.units.length > 0) {
+        if (targetSection.units.length > 0) {
             let def = selectTarget(targetSection.units);
             let logObjTurn = new LogTurnObject(atk, def, system);
 
@@ -552,7 +552,7 @@ const selectSystemTargets = function (logArray, atk, targetSection, activeSettin
             })
 
             // Log result of attack
-            if (!!logObjTurn) logArray.push(constructString(logObjTurn));
+            if (logObjTurn) logArray.push(constructString(logObjTurn));
         
         }
     })
@@ -608,7 +608,7 @@ const behaviourPD = function (logArray, atk, targetSection) {
  */
 const passTurn = function (groupArray) {
     // Generate a Log Array
-    let logArray = new Array;
+    let logArray = [];
 
     // Iterate through each group
     groupArray.forEach (function (activeGroup){
@@ -618,7 +618,7 @@ const passTurn = function (groupArray) {
             if (activeSection.speed === 0 && activeSection.state === "active") {
 
                 // Generate a list of possible target sections.
-                let targetSectionsArray = new Array;
+                let targetSectionsArray = [];
                 groupArray.forEach (function (targetGroup){
                     if (activeGroup.team !== targetGroup.team){
                         targetSectionsArray = targetSectionsArray.concat(targetGroup.sections);
@@ -670,18 +670,19 @@ const passTurn = function (groupArray) {
                     }
 
                     // Create a temporary list of units, in case they flee or are destroyed.
-                    let unitList = new Array;
+                    let unitList = [];
                     unitList = unitList.concat(activeSection.units);
                     unitList.forEach(function(unit) {
 
                         // Check for Conditional Behaviour, such as Fleeing.
-                        if (unit.hp <= 3) {
+                        if (unit.hp <= (unit.hpMax * 0.3) ) {
                             logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
                             behaviourFlee(logArray, unit, activeSection);
                         } else {
                             // Check that there are any possible units left to target in the section.
                             if (targetedSection.units.length > 0) {
-                                sectionBehaviour(logArray, unit, targetedSection);
+                                behaviourAttack(logArray, unit, targetedSection);
+                                // sectionBehaviour(logArray, unit, targetedSection);
                             } else {
                                 console.log(unit.name + " cannot find any units left in the enemy section.")
                             }
@@ -1182,7 +1183,7 @@ console.log(GreenForce)
 
 // Battle Loop
 let regions = [];
-let combatants = new Array;
+let combatants = [];
 combatants.push(RedForce);
 combatants.push(BlueForce);
 // combatants.push(GreenForce);
