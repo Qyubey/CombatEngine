@@ -452,7 +452,7 @@ const hasWeaponWithRange = function (checkitem, range) {
 }
 
 /**
- * Find the highest speed of units within the section
+ * Find the highest speed of units within the section. (High speed is bad)
  */
 const setSpeed = function (section) {
     let highestSpeed = 0;
@@ -927,7 +927,7 @@ function H9Turbolaser () {
         10,
         "energy",
         0,
-        "long"
+        "close"
     ]
 } 
 function XX9HeavyTurbolaser () {
@@ -947,10 +947,19 @@ function NK7IonCannon () {
         20,
         "ion",
         -10,
-        "long"
+        "close"
     ]
 }
-
+function MG7ProtonTorpedoLauncher () {
+    return [
+        "MG7 Proton Torpedo Launcher",
+        30,
+        50,
+        "explosive",
+        -10,
+        "close"
+    ]
+}
 // Weapon Systems
 function KX9LaserArray () {
     return [
@@ -960,6 +969,15 @@ function KX9LaserArray () {
             construct(Weapon, KX9LaserCannon()),
             construct(Weapon, KX9LaserCannon()),
             construct(Weapon, KX9LaserCannon())
+        ]
+    ]
+} 
+function MG7ProtonLaunchers () {
+    return [
+        "MG7 Proton Launchers",
+        [
+            construct(Weapon, MG7ProtonTorpedoLauncher()),
+            construct(Weapon, MG7ProtonTorpedoLauncher())
         ]
     ]
 } 
@@ -1147,7 +1165,8 @@ function XWing () {
         2,
         65,
         [
-            construct(WeaponSystem, KX9LaserArray())
+            construct(WeaponSystem, KX9LaserArray(), ["primary"]),
+            construct(WeaponSystem, MG7ProtonLaunchers(), ["primary"])
         ],
         [behaviourCloseAttack],
         [
@@ -1209,7 +1228,7 @@ function CR90Corvette () {
             construct(WeaponSystem, H9TurbolaserTurret(), ["pointDefense"]),
             construct(WeaponSystem, H9TurbolaserTurret(), ["pointDefense"])
         ],
-        [behaviourLongAttack],
+        [behaviourCloseAttack, behaviourLongAttack],
         [
             {
                 name: "Engines",
@@ -1288,7 +1307,10 @@ let RedForce = new Group(
     [
         new Section(
             [
-                construct(Unit, CR90Corvette(), ["Blockrunner"]),
+                construct(Unit, XWing(), ["Red Alpha"]),
+                construct(Unit, XWing(), ["Red Beta"]),
+                construct(Unit, XWing(), ["Red Gamma"]),
+                construct(Unit, XWing(), ["Red Delta"]),
             ],
             "Red Raiders 1"
         )
@@ -1305,8 +1327,6 @@ let BlueForce = new Group(
                 construct(Unit, TIEFighter(), ["TIE-2a", {type: "type", value: "Corvette"}]),
                 construct(Unit, TIEFighter(), ["TIE-3a", {type: "type", value: "Corvette"}]),
                 construct(Unit, TIEFighter(), ["TIE-4a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-5a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-6a", {type: "type", value: "Corvette"}]),
             ],
             "TIE Squadron A"
         ),
@@ -1316,8 +1336,6 @@ let BlueForce = new Group(
                 construct(Unit, TIEFighter(), ["TIE-2b", {type: "type", value: "Corvette"}]),
                 construct(Unit, TIEFighter(), ["TIE-3b", {type: "type", value: "Corvette"}]),
                 construct(Unit, TIEFighter(), ["TIE-4b", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-5b", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-6b", {type: "type", value: "Corvette"}]),
             ],
             "TIE Squadron B"
         )
