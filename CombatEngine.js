@@ -135,9 +135,19 @@
 
 // Constructors
 
+function getId () {
+    return '_' + Math.random().toString(36).substr(2, 9);
+}
+function addWSystemsAsComponents (Unit) {
+    Unit.wSystems.forEach(function(system) {
+        Unit.components.push(system);
+    });
+}
+
 function Group (sections, name, team) {
     this.sections = sections;
     this.state = 'active';
+    this.id = getId();
 
     // construct args
     this.name = name;
@@ -145,17 +155,17 @@ function Group (sections, name, team) {
 }
 function Section (units, name, targetPrefs) {
     this.units = units;
-    this.speed = 0;
     this.casualties = [];
     this.escapees = [];
+    this.speed = 0;
     this.state = 'active';
-    this.id = '_' + Math.random().toString(36).substr(2, 9);
+    this.id = getId();
 
     // construct args
     this.name = name;
     this.targetPrefs = targetPrefs;
 }
-function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours, name, targetPrefs) {
+function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours, components, name, targetPrefs) {
     this.design = design;
     this.type = type;
     this.hp = hp;
@@ -167,15 +177,11 @@ function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours
     this.evasion = evasion;
     this.wSystems = wSystems;
     this.behaviours = behaviours;
-    this.components = [
-        {name: "Engines", state: "active"},
-        {name: "Shield Generator", state: "active"},
-        {name: "Astrodroid", state: "active"},
-    ]
+    this.components = components;
     this.kills = 0;
     this.totalDamageDealt = 0;
     this.state = 'active';
-    this.id = '_' + Math.random().toString(36).substr(2, 9);
+    this.id = getId();
 
     // construct args
     this.name = name;
@@ -183,18 +189,12 @@ function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours
 
     if (this.wSystems.length > 0) addWSystemsAsComponents(this);
 }
-function addWSystemsAsComponents (Unit) {
-    Unit.wSystems.forEach(function(system) {
-        Unit.components.push(system);
-    });
-}
 
 function WeaponSystem (name, weapons, setting, targetPrefs) {
     this.name = name;
     this.weapons = weapons;
     this.state = 'active';
-    this.type = "wSystem";
-    this.id = '_' + Math.random().toString(36).substr(2, 9);
+    this.id = getId();
 
     // construct args
     this.setting = setting;
@@ -208,13 +208,13 @@ function Weapon (name, minDamage, maxDamage, damageType, accuracy, range) {
     this.accuracy = accuracy;
     this.range = range;
     this.state = 'active';
-    this.id = '_' + Math.random().toString(36).substr(2, 9);
+    this.id = getId();
 }
 
 /**
  * Allows calling of a constuctor function using an array of arguements.
  * @param {*} constructor   the constructor we are calling
- * @param {*} args          the arguements for the constructor
+ * @param {*} args          the arguments for the constructor
  * @param {*} additions     any additions, such as name, to unshift to the start
  */
 function construct(constructor, args, additions) {
@@ -277,7 +277,7 @@ const constructString = function (log) {
     // If a component was destroyed.
     if (log.compDest.length > 0) {
         log.compDest.forEach(function(comp) {
-            logString += " " + comp.name + " was destroyed!";
+            logString += " " + log.def.name + "'s " + comp.name + " was destroyed!";
         });
     }
 
@@ -598,7 +598,7 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
         let newHp = def.hp - damage;
 
         // Damage components
-        if (def.components.length > 0 && damage > def.hpMax / 2) {
+        if (def.components.length > 0 && damage > def.hpMax * 0.3 && Math.random() > 0.6) {
             let componentLost = {};
             let num = Math.floor(Math.random()*def.components.length);
 
@@ -607,7 +607,6 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
                 let system = def.components[num];
                 let wpnNum = Math.floor(Math.random()*system.weapons.length);
 
-                console.log(BlueForce);
                 componentLost = system.weapons.splice(wpnNum, 1);
                 componentLost = componentLost[0];
                 componentLost.state === "destroyed";
@@ -615,7 +614,7 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
                 if (system.weapons.length === 0) {
                     system.active === "destroyed";
                     def.components.splice(num, 1);
-                };
+                }
             } else {
                 componentLost = def.components.splice(num, 1);
                 componentLost = componentLost[0];
@@ -703,7 +702,7 @@ const selectSystemTargets = function (logArray, atk, targetSection, engageRange,
             // If we destroy the unit, remove it from targets and into casualties.
             // If target is not active, all shots miss.
             system.weapons.forEach(function(weapon) {
-                rollAttack(logObjTurn, weapon, atk, def, targetSection, engageRange);
+                if (weapon.state === "active") rollAttack(logObjTurn, weapon, atk, def, targetSection, engageRange);
             })
 
             // Log result of system attack
@@ -780,7 +779,7 @@ const passTurn = function (groupArray) {
         // Iterate through each unit of active section.
         unitList.forEach(function(unit) {
             // Check for Conditional Behaviour, such as Fleeing.
-            if (unit.hp <= (unit.hpMax * 0.3) ) {
+            if (unit.hp <= (unit.hpMax * 0.3) && Math.random() > 0.5) {
                 logArray.push(unit.name + " has panicked. It only has " + unit.hp + " hp remaining.");
                 behaviourFlee(logArray, unit, activeSection);
             // Else begin section behaviour.
@@ -904,8 +903,8 @@ const passTurn = function (groupArray) {
 function KX9LaserCannon () {
     return [
         "KX9 Laser Cannon",
-        1,
-        5,
+        3,
+        9,
         "energy",
         15,
         "close"
@@ -914,8 +913,8 @@ function KX9LaserCannon () {
 function LS1LaserCannon () {
     return [
         "L-S1 Laser Cannon",
-        1,
-        3,
+        2,
+        6,
         "energy",
         15,
         "close"
@@ -1150,7 +1149,21 @@ function XWing () {
         [
             construct(WeaponSystem, KX9LaserArray())
         ],
-        [behaviourCloseAttack]
+        [behaviourCloseAttack],
+        [
+            {
+                name: "Astrodroid",
+                state: "active"
+            },
+            {
+                name: "Engines",
+                state: "active"
+            },
+            {
+                name: "Shield Generator",
+                state: "active"
+            }
+        ]
     ]
 }
 function TIEFighter () {
@@ -1165,7 +1178,17 @@ function TIEFighter () {
         [
             construct(WeaponSystem, LS1LaserArray(), ["primary"])
         ],
-        [behaviourCloseAttack]
+        [behaviourCloseAttack],
+        [
+            {
+                name: "Engines",
+                state: "active"
+            },
+            {
+                name: "NavCom",
+                state: "active"
+            }
+        ]
     ]
 }
 // Corvettes
@@ -1186,7 +1209,17 @@ function CR90Corvette () {
             construct(WeaponSystem, H9TurbolaserTurret(), ["pointDefense"]),
             construct(WeaponSystem, H9TurbolaserTurret(), ["pointDefense"])
         ],
-        [behaviourLongAttack]
+        [behaviourLongAttack],
+        [
+            {
+                name: "Engines",
+                state: "active"
+            },
+            {
+                name: "Shield Generator",
+                state: "active"
+            }
+        ]
     ]
 }
 // Frigates
@@ -1230,7 +1263,21 @@ function Imperial1 () {
             construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
             construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
         ],
-        [behaviourLongAttack]
+        [behaviourLongAttack],
+        [
+            {
+                name: "Engines",
+                state: "active"
+            },
+            {
+                name: "Shield Generator",
+                state: "active"
+            },
+            {
+                name: "Bridge",
+                state: "active"
+            }
+        ]
     ]
 }
 
@@ -1241,12 +1288,7 @@ let RedForce = new Group(
     [
         new Section(
             [
-                construct(Unit, XWing(), ["Red Alpha"]),
-                construct(Unit, XWing(), ["Red Beta"]),
-                construct(Unit, XWing(), ["Red Gamma"]),
-                construct(Unit, XWing(), ["Red Delta"]),
                 construct(Unit, CR90Corvette(), ["Blockrunner"]),
-                construct(Unit, CR90Corvette(), ["Redrunner"]),
             ],
             "Red Raiders 1"
         )
@@ -1266,7 +1308,18 @@ let BlueForce = new Group(
                 construct(Unit, TIEFighter(), ["TIE-5a", {type: "type", value: "Corvette"}]),
                 construct(Unit, TIEFighter(), ["TIE-6a", {type: "type", value: "Corvette"}]),
             ],
-            "TIE Squadron 1"
+            "TIE Squadron A"
+        ),
+        new Section(
+            [
+                construct(Unit, TIEFighter(), ["TIE-1b", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-2b", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-3b", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-4b", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-5b", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-6b", {type: "type", value: "Corvette"}]),
+            ],
+            "TIE Squadron B"
         )
     ],
     "Blue Force",
