@@ -133,8 +133,6 @@
 // Add Area Effect weapons. These target Regions themselves.
 // Undodgable, they incur damage to all units within the region. Can include friendlies.
 
-// Constants
-
 // Constructors
 
 function Group (sections, name, team) {
@@ -151,6 +149,7 @@ function Section (units, name, targetPrefs) {
     this.casualties = [];
     this.escapees = [];
     this.state = 'active';
+    this.id = '_' + Math.random().toString(36).substr(2, 9);
 
     // construct args
     this.name = name;
@@ -168,18 +167,34 @@ function Unit (design, type, hp, sp, armor, speed, evasion, wSystems, behaviours
     this.evasion = evasion;
     this.wSystems = wSystems;
     this.behaviours = behaviours;
+    this.components = [
+        {name: "Engines", state: "active"},
+        {name: "Shield Generator", state: "active"},
+        {name: "Astrodroid", state: "active"},
+    ]
     this.kills = 0;
     this.totalDamageDealt = 0;
     this.state = 'active';
+    this.id = '_' + Math.random().toString(36).substr(2, 9);
 
     // construct args
     this.name = name;
     this.targetPrefs = targetPrefs;
+
+    if (this.wSystems.length > 0) addWSystemsAsComponents(this);
 }
+function addWSystemsAsComponents (Unit) {
+    Unit.wSystems.forEach(function(system) {
+        Unit.components.push(system);
+    });
+}
+
 function WeaponSystem (name, weapons, setting, targetPrefs) {
     this.name = name;
     this.weapons = weapons;
     this.state = 'active';
+    this.type = "wSystem";
+    this.id = '_' + Math.random().toString(36).substr(2, 9);
 
     // construct args
     this.setting = setting;
@@ -193,6 +208,7 @@ function Weapon (name, minDamage, maxDamage, damageType, accuracy, range) {
     this.accuracy = accuracy;
     this.range = range;
     this.state = 'active';
+    this.id = '_' + Math.random().toString(36).substr(2, 9);
 }
 
 /**
@@ -211,7 +227,6 @@ function construct(constructor, args, additions) {
     F.prototype = constructor.prototype;
     return new F();
 }
-
 
 // Logging
 
@@ -258,6 +273,13 @@ const constructString = function (log) {
 
     // Tabulate all damage against a single target's hull.
     if (log.hpDam > 0) logString += " " + log.atk.name + " dealt " + log.hpDam + " hull damage. ";
+
+    // If a component was destroyed.
+    if (log.compDest.length > 0) {
+        log.compDest.forEach(function(comp) {
+            logString += " " + comp.name + " was destroyed!";
+        });
+    }
 
     // // If they were disabled.
     // if (log.disables > 0) logString += " " + log.def.name + " has been disabled! ";
@@ -525,6 +547,7 @@ function LogTurnObject (atk, def, system) {
     this.soaks = 0;
     this.kill = false;
     this.sBreak = false;
+    this.compDest = [];
 }
 
 /**
@@ -573,6 +596,33 @@ const damageCalc = function (logObjTurn, weapon, atk, def) {
         }
 
         let newHp = def.hp - damage;
+
+        // Damage components
+        if (def.components.length > 0 && damage > def.hpMax / 2) {
+            let componentLost = {};
+            let num = Math.floor(Math.random()*def.components.length);
+
+            // If we grabbed a weapon system.
+            if (def.components[num].weapons) {
+                let system = def.components[num];
+                let wpnNum = Math.floor(Math.random()*system.weapons.length);
+
+                console.log(BlueForce);
+                componentLost = system.weapons.splice(wpnNum, 1);
+                componentLost = componentLost[0];
+                componentLost.state === "destroyed";
+                // If we destroyed all weapons of the system, remove it.
+                if (system.weapons.length === 0) {
+                    system.active === "destroyed";
+                    def.components.splice(num, 1);
+                };
+            } else {
+                componentLost = def.components.splice(num, 1);
+                componentLost = componentLost[0];
+                componentLost.state === "destroyed";
+            }
+            logObjTurn.compDest.push(componentLost);
+        }
         
         // If we reduced hp to or below zero, the unit has been destroyed.
         if (newHp <= 0) {
@@ -741,7 +791,7 @@ const passTurn = function (groupArray) {
                 // Execute behaviour.
                 sectionBehaviour(logArray, unit, targetedSection);
                 } else {
-                    console.log(unit.name + " cannot find any units left in the enemy section.")
+                    // console.log(unit.name + " cannot find any units left in the enemy section.")
                 }
             }
         });
@@ -814,7 +864,7 @@ const passTurn = function (groupArray) {
                                     if (activeSection.units.length > 0 && hasPointDefense(unit)) {
                                         behaviourPD(logArray, unit, activeSection);
                                     } else {
-                                        console.log(unit.name + " cannot find any units left in the enemy section.");
+                                        // console.log(unit.name + " cannot find any units left in the enemy section.");
                                     }
                                 })
                             }
@@ -851,293 +901,338 @@ const passTurn = function (groupArray) {
 // Models
 
 // Weapons
-const KX9LaserCannon = [
-    "KX9 Laser Cannon",
-    1,
-    5,
-    "energy",
-    15,
-    "close"
-]
-const LS1LaserCannon = [
-    "L-S1 Laser Cannon",
-    1,
-    3,
-    "energy",
-    15,
-    "close"
-]
-const H9Turbolaser = [
-    "H9 Turbolaser",
-    5,
-    10,
-    "energy",
-    0,
-    "long"
-]
-const XX9HeavyTurbolaser = [
-    "XX9 Heavy Turbolaser",
-    20,
-    30,
-    "energy",
-    -15,
-    "long"
-]
-const NK7IonCannon = [
-    "NK-7 Ion Cannon",
-    10,
-    20,
-    "ion",
-    -10,
-    "long"
-]
+function KX9LaserCannon () {
+    return [
+        "KX9 Laser Cannon",
+        1,
+        5,
+        "energy",
+        15,
+        "close"
+    ]
+}
+function LS1LaserCannon () {
+    return [
+        "L-S1 Laser Cannon",
+        1,
+        3,
+        "energy",
+        15,
+        "close"
+    ]
+}
+function H9Turbolaser () {
+    return [
+        "H9 Turbolaser",
+        5,
+        10,
+        "energy",
+        0,
+        "long"
+    ]
+} 
+function XX9HeavyTurbolaser () {
+    return [
+        "XX9 Heavy Turbolaser",
+        20,
+        30,
+        "energy",
+        -15,
+        "long"
+    ]
+}
+function NK7IonCannon () {
+    return [
+        "NK-7 Ion Cannon",
+        10,
+        20,
+        "ion",
+        -10,
+        "long"
+    ]
+}
 
 // Weapon Systems
-const KX9LaserArray = [
-    "KX-9 Laser Array",
-    [
-        construct(Weapon, KX9LaserCannon),
-        construct(Weapon, KX9LaserCannon),
-        construct(Weapon, KX9LaserCannon),
-        construct(Weapon, KX9LaserCannon)
+function KX9LaserArray () {
+    return [
+        "KX-9 Laser Array",
+        [
+            construct(Weapon, KX9LaserCannon()),
+            construct(Weapon, KX9LaserCannon()),
+            construct(Weapon, KX9LaserCannon()),
+            construct(Weapon, KX9LaserCannon())
+        ]
     ]
-]
-const LS1LaserArray = [
-    "L-S1 Laser Array",
-    [
-        construct(Weapon, LS1LaserCannon),
-        construct(Weapon, LS1LaserCannon)
+} 
+function LS1LaserArray () {
+    return [
+        "L-S1 Laser Array",
+        [
+            construct(Weapon, LS1LaserCannon()),
+            construct(Weapon, LS1LaserCannon())
+        ]
     ]
-]
-const H9TurbolaserTurret = [
-    "H9 Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser)
+}
+function H9TurbolaserTurret () {
+    return [
+        "H9 Turbolaser Turret",
+        [
+            construct(Weapon, H9Turbolaser())
+        ]
     ]
-]
-const H9DualTurbolaserTurret = [
-    "H9 Dual Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
+}
+function H9DualTurbolaserTurret () {
+    return [
+        "H9 Dual Turbolaser Turret",
+        [
+            construct(Weapon, H9Turbolaser()),
+            construct(Weapon, H9Turbolaser())
+        ]
     ]
-]
+}
 
-const XX9QuadHeavyTurbolaserTurret = [
-    "XX9 Quad Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
+function XX9QuadHeavyTurbolaserTurret () {
+    return [
+        "XX9 Quad Heavy Turbolaser Turret",
+        [
+            construct(Weapon, H9Turbolaser()),
+            construct(Weapon, H9Turbolaser()),
+            construct(Weapon, H9Turbolaser()),
+            construct(Weapon, H9Turbolaser())
+        ]
     ]
-]
-const XX9TripleHeavyTurbolaserTurret = [
-    "XX9 Triple Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
+}
+function XX9TripleHeavyTurbolaserTurret () {
+    return [
+        "XX9 Triple Heavy Turbolaser Turret",
+        [
+            construct(Weapon, H9Turbolaser()),
+            construct(Weapon, H9Turbolaser()),
+            construct(Weapon, H9Turbolaser())
+        ]
     ]
-]
-const XX9DualHeavyTurbolaserTurret = [
-    "XX9 Dual Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser),
-        construct(Weapon, H9Turbolaser)
+}
+function XX9DualHeavyTurbolaserTurret () {
+    return [
+        "XX9 Dual Heavy Turbolaser Turret",
+        [
+            construct(Weapon, H9Turbolaser()),
+            construct(Weapon, H9Turbolaser())
+        ]
     ]
-]
-const XX9HeavyTurbolaserTurret = [
-    "XX9 Heavy Turbolaser Turret",
-    [
-        construct(Weapon, H9Turbolaser)
+}
+function XX9HeavyTurbolaserTurret () {
+    return [
+        "XX9 Heavy Turbolaser Turret",
+        [
+            construct(Weapon, H9Turbolaser())
+        ]
     ]
-]
-const XX9HeavyTurbolaserx20 = [
-    "XX9 Heavy Turbolaser Grid",
-    [
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
-        construct(Weapon, XX9HeavyTurbolaser),
+}
+function XX9HeavyTurbolaserx20 () {
+    return [
+        "XX9 Heavy Turbolaser Grid",
+        [
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+            construct(Weapon, XX9HeavyTurbolaser()),
+        ]
     ]
-]
-const NK7DualHeavyIonCannonTurret = [
-    "NK7 Dual Heavy Ion Cannon Turret",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon)
+}
+function NK7DualHeavyIonCannonTurret () {
+    return [
+        "NK7 Dual Heavy Ion Cannon Turret",
+        [
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon())
+        ]
     ]
-]
+}
 
-const NK7IonCannonx20 = [
-    "NK-7 Ion Cannon Grid",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
+function NK7IonCannonx20 () {
+    return [
+        "NK-7 Ion Cannon Grid",
+        [
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+        ]
     ]
-]
-const NK7IonCannonx15 = [
-    "NK-7 Ion Cannon Grid",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
+}
+function NK7IonCannonx15 () {
+    return [
+        "NK-7 Ion Cannon Grid",
+        [
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+        ]
     ]
-]
-const NK7IonCannonx10 = [
-    "NK-7 Ion Cannon Grid",
-    [
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
-        construct(Weapon, NK7IonCannon),
+}
+function NK7IonCannonx10 () {
+    return [
+        "NK-7 Ion Cannon Grid",
+        [
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+            construct(Weapon, NK7IonCannon()),
+        ]
     ]
-]
+}
+
 
 // Fighters
-const XWing = [
-    "T65 X-Wing",
-    "Fighter",
-    10,
-    10,
-    1,
-    2,
-    65,
-    [
-        construct(WeaponSystem, KX9LaserArray, ["primary"])
-    ],
-    [behaviourCloseAttack]
-];
-const TIEFighter = [
-    "TIE/LN Starfighter",
-    "Fighter",
-    10,
-    0,
-    0,
-    2,
-    50,
-    [
-        construct(WeaponSystem, LS1LaserArray, ["primary"])
-    ],
-    [behaviourCloseAttack]
-];
+function XWing () {
+    return [
+        "T65 X-Wing",
+        "Fighter",
+        10,
+        10,
+        1,
+        2,
+        65,
+        [
+            construct(WeaponSystem, KX9LaserArray())
+        ],
+        [behaviourCloseAttack]
+    ]
+}
+function TIEFighter () {
+    return [
+        "TIE/LN Starfighter",
+        "Fighter",
+        10,
+        0,
+        0,
+        2,
+        50,
+        [
+            construct(WeaponSystem, LS1LaserArray(), ["primary"])
+        ],
+        [behaviourCloseAttack]
+    ]
+}
 // Corvettes
-const CR90Corvette = [
-    "CR90 'Corellian' Corvette",
-    "Corvette",
-    30,
-    20,
-    3,
-    5,
-    45,
-    [
-        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9DualTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"]),
-        construct(WeaponSystem, H9TurbolaserTurret, ["pointDefense"])
-    ],
-    [behaviourLongAttack]
-];
+function CR90Corvette () {
+    return [
+        "CR90 'Corellian' Corvette",
+        "Corvette",
+        30,
+        20,
+        3,
+        5,
+        45,
+        [
+            construct(WeaponSystem, H9DualTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, H9DualTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, H9TurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, H9TurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, H9TurbolaserTurret(), ["pointDefense"]),
+            construct(WeaponSystem, H9TurbolaserTurret(), ["pointDefense"])
+        ],
+        [behaviourLongAttack]
+    ]
+}
 // Frigates
 // Capitals
-const Imperial1 = [
-    "Imperial I-class Star Destroyer",
-    "Capital",
-    1000,
-    1000,
-    5,
-    10,
-    5,
-    [
-        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["primary"]),
-        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["secondary"]),
-        construct(WeaponSystem, XX9HeavyTurbolaserx20, ["pointDefense"]),
-
-        construct(WeaponSystem, NK7IonCannonx20, ["primary"]),
-        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
-        construct(WeaponSystem, NK7IonCannonx15, ["secondary"]),
-        construct(WeaponSystem, NK7IonCannonx10, ["pointDefense"]),
-
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["secondary"]),
-
-        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
-        construct(WeaponSystem, NK7DualHeavyIonCannonTurret, ["primary"]),
-
-        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret, ["primary"]),
-
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret, ["primary"]),
-
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-        construct(WeaponSystem, XX9DualHeavyTurbolaserTurret, ["primary"]),
-    ],
-    [behaviourLongAttack]
-];
+function Imperial1 () {
+    return [
+        "Imperial I-class Star Destroyer",
+        "Capital",
+        1000,
+        1000,
+        5,
+        10,
+        5,
+        [
+            construct(WeaponSystem, XX9HeavyTurbolaserx20(), ["primary"]),
+            construct(WeaponSystem, XX9HeavyTurbolaserx20(), ["secondary"]),
+            construct(WeaponSystem, XX9HeavyTurbolaserx20(), ["pointDefense"]),
+    
+            construct(WeaponSystem, NK7IonCannonx20(), ["primary"]),
+            construct(WeaponSystem, NK7IonCannonx15(), ["secondary"]),
+            construct(WeaponSystem, NK7IonCannonx15(), ["secondary"]),
+            construct(WeaponSystem, NK7IonCannonx10(), ["pointDefense"]),
+    
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["secondary"]),
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["secondary"]),
+    
+            construct(WeaponSystem, NK7DualHeavyIonCannonTurret(), ["primary"]),
+            construct(WeaponSystem, NK7DualHeavyIonCannonTurret(), ["primary"]),
+    
+            construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9QuadHeavyTurbolaserTurret(), ["primary"]),
+    
+            construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9TripleHeavyTurbolaserTurret(), ["primary"]),
+    
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
+            construct(WeaponSystem, XX9DualHeavyTurbolaserTurret(), ["primary"]),
+        ],
+        [behaviourLongAttack]
+    ]
+}
 
 
 // Setup
@@ -1146,19 +1241,15 @@ let RedForce = new Group(
     [
         new Section(
             [
-                construct(Unit, XWing, ["Red Alpha"]),
-                construct(Unit, XWing, ["Red Beta"]),
-                construct(Unit, XWing, ["Red Gamma"]),
-                construct(Unit, XWing, ["Red Delta"]),
-                construct(Unit, CR90Corvette, ["Blockrunner"]),
+                construct(Unit, XWing(), ["Red Alpha"]),
+                construct(Unit, XWing(), ["Red Beta"]),
+                construct(Unit, XWing(), ["Red Gamma"]),
+                construct(Unit, XWing(), ["Red Delta"]),
+                construct(Unit, CR90Corvette(), ["Blockrunner"]),
+                construct(Unit, CR90Corvette(), ["Redrunner"]),
             ],
             "Red Raiders 1"
-        ),
-        new Section(
-            [
-            ],
-            "Red Corvette"
-        ),
+        )
     ],
     "Red Force",
     1
@@ -1168,25 +1259,14 @@ let BlueForce = new Group(
     [
         new Section(
             [
-                construct(Unit, TIEFighter, ["TIE-1a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter, ["TIE-2a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter, ["TIE-3a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter, ["TIE-4a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter, ["TIE-5a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter, ["TIE-6a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-1a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-2a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-3a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-4a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-5a", {type: "type", value: "Corvette"}]),
+                construct(Unit, TIEFighter(), ["TIE-6a", {type: "type", value: "Corvette"}]),
             ],
             "TIE Squadron 1"
-        ),
-        new Section(
-            [
-                construct(Unit, TIEFighter, ["TIE-1b"]),
-                construct(Unit, TIEFighter, ["TIE-2b"]),
-                construct(Unit, TIEFighter, ["TIE-3b"]),
-                construct(Unit, TIEFighter, ["TIE-4b"]),
-                construct(Unit, TIEFighter, ["TIE-5b"]),
-                construct(Unit, TIEFighter, ["TIE-6b"]),
-            ],
-            "TIE Squadron 2"
         )
     ],
     "Blue Force",
@@ -1194,6 +1274,9 @@ let BlueForce = new Group(
 )
 
 // Execution
+
+console.log(RedForce);
+console.log(BlueForce);
 
 // Battle Loop
 let regions = [];
@@ -1224,7 +1307,6 @@ for (let i = 0; i < combatants.length; i++) {
         combatants.splice(i, 1);
     }
 }
-console.log(combatants);
 
 // Set up Regions
 for (let i = 0; i < combatants.length*3; i++) {
@@ -1236,7 +1318,6 @@ for (let i = 0; i < combatants.length; i++) {
     let availableRegions = [i*3, i*3+1, i*3+2]
     combatants[i].sections.forEach(function(section) {
         section.region = availableRegions[Math.floor(Math.random()*availableRegions.length)];
-        console.log(section.region);
     })
 }
 combatants.forEach(function(combatant) {
