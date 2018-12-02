@@ -200,13 +200,15 @@ function WeaponSystem (name, weapons, setting, targetPrefs) {
     this.setting = setting;
     this.targetPrefs = targetPrefs;
 }
-function Weapon (name, minDamage, maxDamage, damageType, accuracy, range) {
+function Weapon (name, minDamage, maxDamage, damageType, accuracy, range, usesAmmo, ammo) {
     this.name = name;
     this.minDamage = minDamage;
     this.maxDamage = maxDamage;
     this.damageType = damageType;
     this.accuracy = accuracy;
     this.range = range;
+    this.usesAmmo = usesAmmo;
+    this.ammo = ammo;
     this.state = 'active';
     this.id = getId();
 }
@@ -702,7 +704,19 @@ const selectSystemTargets = function (logArray, atk, targetSection, engageRange,
             // If we destroy the unit, remove it from targets and into casualties.
             // If target is not active, all shots miss.
             system.weapons.forEach(function(weapon) {
-                if (weapon.state === "active") rollAttack(logObjTurn, weapon, atk, def, targetSection, engageRange);
+                if (weapon.state === "active") {
+                    // Check ammo
+                    if (weapon.usesAmmo) {
+                        if (weapon.ammo > 0) {
+                            weapon.ammo -= 1;
+                            rollAttack(logObjTurn, weapon, atk, def, targetSection, engageRange);
+                        } else {
+                            logObjTurn = null;
+                        }
+                    } else {
+                        rollAttack(logObjTurn, weapon, atk, def, targetSection, engageRange);
+                    }
+                }
             })
 
             // Log result of system attack
@@ -907,7 +921,9 @@ function KX9LaserCannon () {
         9,
         "energy",
         15,
-        "close"
+        "close",
+        false,
+        null
     ]
 }
 function LS1LaserCannon () {
@@ -917,7 +933,9 @@ function LS1LaserCannon () {
         6,
         "energy",
         15,
-        "close"
+        "close",
+        false,
+        null
     ]
 }
 function H9Turbolaser () {
@@ -927,7 +945,9 @@ function H9Turbolaser () {
         10,
         "energy",
         0,
-        "close"
+        "close",
+        false,
+        null
     ]
 } 
 function XX9HeavyTurbolaser () {
@@ -937,7 +957,9 @@ function XX9HeavyTurbolaser () {
         30,
         "energy",
         -15,
-        "long"
+        "long",
+        false,
+        null
     ]
 }
 function NK7IonCannon () {
@@ -947,7 +969,9 @@ function NK7IonCannon () {
         20,
         "ion",
         -10,
-        "close"
+        "close",
+        false,
+        null
     ]
 }
 function MG7ProtonTorpedoLauncher () {
@@ -956,8 +980,10 @@ function MG7ProtonTorpedoLauncher () {
         30,
         50,
         "explosive",
-        -10,
-        "close"
+        -20,
+        "close",
+        true,
+        3
     ]
 }
 // Weapon Systems
@@ -1300,6 +1326,31 @@ function Imperial1 () {
     ]
 }
 
+// Testing
+function TestFat () {
+    return [
+        "Im fat",
+        "Corvette",
+        3000,
+        20,
+        0,
+        5,
+        45,
+        [
+        ],
+        [behaviourCloseAttack, behaviourLongAttack],
+        [
+            {
+                name: "Engines",
+                state: "active"
+            },
+            {
+                name: "Shield Generator",
+                state: "active"
+            }
+        ]
+    ]
+}
 
 // Setup
 
@@ -1311,6 +1362,8 @@ let RedForce = new Group(
                 construct(Unit, XWing(), ["Red Beta"]),
                 construct(Unit, XWing(), ["Red Gamma"]),
                 construct(Unit, XWing(), ["Red Delta"]),
+                construct(Unit, XWing(), ["Red Epsilon"]),
+                construct(Unit, XWing(), ["Red Zeta"]),
             ],
             "Red Raiders 1"
         )
@@ -1326,19 +1379,21 @@ let BlueForce = new Group(
                 construct(Unit, TIEFighter(), ["TIE-1a", {type: "type", value: "Corvette"}]),
                 construct(Unit, TIEFighter(), ["TIE-2a", {type: "type", value: "Corvette"}]),
                 construct(Unit, TIEFighter(), ["TIE-3a", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-4a", {type: "type", value: "Corvette"}]),
             ],
             "TIE Squadron A"
         ),
         new Section(
             [
-                construct(Unit, TIEFighter(), ["TIE-1b", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-2b", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-3b", {type: "type", value: "Corvette"}]),
-                construct(Unit, TIEFighter(), ["TIE-4b", {type: "type", value: "Corvette"}]),
+                construct(Unit, TestFat(), ["Fatty"]),
             ],
-            "TIE Squadron B"
-        )
+            "Fat"
+        ),
+        new Section(
+            [
+                construct(Unit, TestFat(), ["Fatty"]),
+            ],
+            "Fat"
+        ),
     ],
     "Blue Force",
     2
